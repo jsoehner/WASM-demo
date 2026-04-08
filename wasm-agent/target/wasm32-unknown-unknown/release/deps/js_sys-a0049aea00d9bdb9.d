@@ -1,0 +1,10 @@
+/Users/jsoehner/wasm-demo/wasm-agent/target/wasm32-unknown-unknown/release/deps/js_sys-a0049aea00d9bdb9.d: /Users/jsoehner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/js-sys-0.3.94/src/lib.rs /Users/jsoehner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/js-sys-0.3.94/src/futures/mod.rs /Users/jsoehner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/js-sys-0.3.94/src/futures/queue.rs /Users/jsoehner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/js-sys-0.3.94/src/futures/task/singlethread.rs
+
+/Users/jsoehner/wasm-demo/wasm-agent/target/wasm32-unknown-unknown/release/deps/libjs_sys-a0049aea00d9bdb9.rlib: /Users/jsoehner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/js-sys-0.3.94/src/lib.rs /Users/jsoehner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/js-sys-0.3.94/src/futures/mod.rs /Users/jsoehner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/js-sys-0.3.94/src/futures/queue.rs /Users/jsoehner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/js-sys-0.3.94/src/futures/task/singlethread.rs
+
+/Users/jsoehner/wasm-demo/wasm-agent/target/wasm32-unknown-unknown/release/deps/libjs_sys-a0049aea00d9bdb9.rmeta: /Users/jsoehner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/js-sys-0.3.94/src/lib.rs /Users/jsoehner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/js-sys-0.3.94/src/futures/mod.rs /Users/jsoehner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/js-sys-0.3.94/src/futures/queue.rs /Users/jsoehner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/js-sys-0.3.94/src/futures/task/singlethread.rs
+
+/Users/jsoehner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/js-sys-0.3.94/src/lib.rs:
+/Users/jsoehner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/js-sys-0.3.94/src/futures/mod.rs:
+/Users/jsoehner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/js-sys-0.3.94/src/futures/queue.rs:
+/Users/jsoehner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/js-sys-0.3.94/src/futures/task/singlethread.rs:

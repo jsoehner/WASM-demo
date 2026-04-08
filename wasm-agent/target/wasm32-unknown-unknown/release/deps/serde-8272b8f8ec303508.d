@@ -1,0 +1,14 @@
+/Users/jsoehner/wasm-demo/wasm-agent/target/wasm32-unknown-unknown/release/deps/serde-8272b8f8ec303508.d: /Users/jsoehner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/lib.rs /Users/jsoehner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/integer128.rs /Users/jsoehner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/mod.rs /Users/jsoehner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/de.rs /Users/jsoehner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/ser.rs /Users/jsoehner/wasm-demo/wasm-agent/target/wasm32-unknown-unknown/release/build/serde-4cd7a86753f3b50f/out/private.rs
+
+/Users/jsoehner/wasm-demo/wasm-agent/target/wasm32-unknown-unknown/release/deps/libserde-8272b8f8ec303508.rlib: /Users/jsoehner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/lib.rs /Users/jsoehner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/integer128.rs /Users/jsoehner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/mod.rs /Users/jsoehner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/de.rs /Users/jsoehner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/ser.rs /Users/jsoehner/wasm-demo/wasm-agent/target/wasm32-unknown-unknown/release/build/serde-4cd7a86753f3b50f/out/private.rs
+
+/Users/jsoehner/wasm-demo/wasm-agent/target/wasm32-unknown-unknown/release/deps/libserde-8272b8f8ec303508.rmeta: /Users/jsoehner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/lib.rs /Users/jsoehner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/integer128.rs /Users/jsoehner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/mod.rs /Users/jsoehner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/de.rs /Users/jsoehner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/ser.rs /Users/jsoehner/wasm-demo/wasm-agent/target/wasm32-unknown-unknown/release/build/serde-4cd7a86753f3b50f/out/private.rs
+
+/Users/jsoehner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/lib.rs:
+/Users/jsoehner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/integer128.rs:
+/Users/jsoehner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/mod.rs:
+/Users/jsoehner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/de.rs:
+/Users/jsoehner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/ser.rs:
+/Users/jsoehner/wasm-demo/wasm-agent/target/wasm32-unknown-unknown/release/build/serde-4cd7a86753f3b50f/out/private.rs:
+
+# env-dep:OUT_DIR=/Users/jsoehner/wasm-demo/wasm-agent/target/wasm32-unknown-unknown/release/build/serde-4cd7a86753f3b50f/out
