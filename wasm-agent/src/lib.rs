@@ -2,6 +2,8 @@ use wasm_bindgen::prelude::*;
 use wasm_bindgen_futures::JsFuture;
 use web_sys::{Request, RequestInit, RequestMode, Response, window};
 use serde::{Deserialize, Serialize};
+use console_error_panic_hook;
+use console_log;
 
 #[derive(Serialize, Deserialize, Clone)]
 struct LlmMessage { role: String, content: String }
@@ -18,6 +20,12 @@ struct OllamaResponse { message: LlmMessage }
 
 #[wasm_bindgen]
 pub struct Agent { api_url: String, api_key: String, provider: String }
+
+#[wasm_bindgen(start)]
+pub fn main() {
+    console_error_panic_hook::set_once();
+    console_log::init_with_level(log::Level::Info).unwrap();
+}
 
 #[wasm_bindgen]
 impl Agent {
@@ -46,26 +54,26 @@ impl Agent {
     }
 
     async fn call_llm(&self, model: &str, messages: &Vec<LlmMessage>) -> Result<String, JsValue> {
-        let mut opts = RequestInit::new();
-        opts.method("POST");
-        opts.mode(RequestMode::Cors);
-        let (full_url, body_str) = if (self.provider -eq "ollama") {
+        let opts = RequestInit::new();
+        opts.set_method("POST");
+        opts.set_mode(RequestMode::Cors);
+        let (full_url, body_str) = if self.provider == "ollama" {
             (format!("{}/chat", self.api_url.trim_end_matches('/')), 
              serde_json::to_string(&OllamaRequest { model: model.to_string(), messages: messages.clone(), stream: false }).unwrap())
         } else {
             (format!("{}/chat/completions", self.api_url.trim_end_matches('/')), 
              serde_json::to_string(&OpenAiRequest { model: model.to_string(), messages: messages.clone(), stream: false }).unwrap())
         };
-        opts.body(Some(&JsValue::from_str(&body_str)));
+        opts.set_body(&JsValue::from_str(&body_str));
         let req = Request::new_with_str_and_init(&full_url, &opts)?;
         req.headers().set("Content-Type", "application/json")?;
-        if (!self.api_key.is_empty()) { req.headers().set("Authorization", &format!("Bearer {}", self.api_key))?; }
+        if !self.api_key.is_empty() { req.headers().set("Authorization", &format!("Bearer {}", self.api_key))?; }
         let win = window().unwrap();
         let resp_val = JsFuture::from(win.fetch_with_request(&req)).await?;
         let resp: Response = resp_val.dyn_into().unwrap();
-        if (!resp.ok()) { return Err(JsFuture::from(resp.text()?).await?); }
+        if !resp.ok() { return Err(JsFuture::from(resp.text()?).await?); }
         let json = JsFuture::from(resp.json()?).await?;
-        if (self.provider -eq "ollama") {
+        if self.provider == "ollama" {
             let r: OllamaResponse = serde_wasm_bindgen::from_value(json)?; Ok(r.message.content)
         } else {
             let r: OpenAiResponse = serde_wasm_bindgen::from_value(json)?; Ok(r.choices[0].message.content.clone())

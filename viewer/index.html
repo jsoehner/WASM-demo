@@ -25,28 +25,29 @@
         <div id="log">Ready.</div>
     </div>
     <script type="module">
-        import init, { Agent } from './pkg/wasm_agent.js';
-        async function run() {
-            await init();
-            document.getElementById('run-btn').addEventListener('click', async () => {
-                const log = document.getElementById('log');
-                log.textContent = "Processing...";
-                try {
-                    const agent = new Agent(
-                        document.getElementById('api-url').value,
-                        document.getElementById('api-key').value,
-                        document.getElementById('provider').value
-                    );
-                    log.textContent = await agent.run_task(
-                        document.getElementById('model-id').value,
-                        document.getElementById('prompt').value
-                    );
-                } catch (e) {
-                    log.textContent = "Error: " + e;
-                }
-            });
-        }
-        run();
+        import { Agent } from './pkg/wasm_agent.js';
+
+        // WASM initialization is automatic with #[wasm_bindgen(start)]
+        
+        // Use the agent
+        document.getElementById('run-btn').addEventListener('click', async () => {
+            const log = document.getElementById('log');
+            log.textContent = "Processing...";
+            try {
+                const agent = new Agent(
+                    document.getElementById('api-url').value,
+                    document.getElementById('api-key').value,
+                    document.getElementById('provider').value
+                );
+                const result = await agent.run_task(
+                    document.getElementById('model-id').value,
+                    document.getElementById('prompt').value
+                );
+                log.textContent = result;
+            } catch (e) {
+                log.textContent = "Error: " + e;
+            }
+        });
     </script>
 </body>
 </html>

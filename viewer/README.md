@@ -8,19 +8,14 @@ This directory contains the WebAssembly viewer with platform-specific WASM binar
 viewer/
 ├── index.html          # Main viewer HTML page
 ├── pkg/
-│   ├── linux-wasm_agent.wasm       # Linux x64 binary
-│   ├── windows-x64-wasm_agent.wasm # Windows x64 binary
-│   └── macos-wasm_agent.wasm       # macOS binary
+│   ├── wasm_agent.js       # Generated JavaScript bindings
+│   └── wasm_agent_bg.wasm  # WebAssembly binary
 └── README.md           # This file
 ```
 
 ## Platform Detection
 
-The viewer automatically detects your operating system and loads the appropriate WASM binary:
-
-- **Windows x64**: Uses `windows-x64-wasm_agent.wasm`
-- **Linux**: Uses `linux-wasm_agent.wasm`
-- **macOS**: Uses `macos-wasm_agent.wasm`
+The viewer uses a universal WASM binary that works in all modern web browsers.
 
 ## Building the WASM Binaries
 

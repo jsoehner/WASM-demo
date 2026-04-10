@@ -25,11 +25,13 @@ jobs:
 
       - name: Build WASM
         run: |
+          source $HOME/.cargo/env
+          cargo install wasm-pack
           cd wasm-agent
-          cargo build --target wasm32-unknown-unknown --release
+          wasm-pack build --target web --out-dir ../viewer/pkg --out-name wasm_agent
 
       - name: Upload WASM Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: wasm-binary
-          path: wasm-agent/target/wasm32-unknown-unknown/release/*.wasm
+          name: wasm-pkg
+          path: viewer/pkg/

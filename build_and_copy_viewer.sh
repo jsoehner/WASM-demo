@@ -1,53 +1,24 @@
 #!/bin/bash
 
-# Build and copy WASM binaries for each platform to viewer directory
+echo "=== Building WASM Module ==="
 
-# Create viewer directory if it doesn't exist
-mkdir -p viewer/pkg
+# Build WASM using wasm-pack (universal for web)
+cd wasm-agent
+wasm-pack build --target web --out-dir ../viewer/pkg --out-name wasm_agent
 
-# Build for each platform
-echo "Building WASM for Windows x64..."
-cargo build --target x86_64-pc-windows-msvc --release --out-dir target/x86_64-pc-windows-msvc/release 2>/dev/null || true
+echo "=== Build Complete ==="
+echo "WASM files generated in viewer/pkg/"#!/bin/bash
 
-echo "Building WASM for Linux..."
-cargo build --target x86_64-unknown-linux-gnu --release --out-dir target/x86_64-unknown-linux-gnu/release 2>/dev/null || true
+#!/bin/bash
 
-echo "Building WASM for macOS..."
-cargo build --target x86_64-apple-darwin --release --out-dir target/x86_64-apple-darwin/release 2>/dev/null || true
+echo "=== Building WASM Module ==="
 
-# Copy platform-specific binaries to viewer
-echo "Copying WASM binaries to viewer..."
+# Build WASM using wasm-pack (universal for web)
+cd wasm-agent
+wasm-pack build --target web --out-dir ../viewer/pkg --out-name wasm_agent
 
-# Linux binary
-if [ -f "target/x86_64-unknown-linux-gnu/release/*.wasm" ]; then
-    cp target/x86_64-unknown-linux-gnu/release/*.wasm viewer/pkg/linux-wasm_agent.wasm
-fi
-
-# Windows binary
-if [ -f "target/x86_64-pc-windows-msvc/release/*.wasm" ]; then
-    cp target/x86_64-pc-windows-msvc/release/*.wasm viewer/pkg/windows-x64-wasm_agent.wasm
-fi
-
-# macOS binary
-if [ -f "target/x86_64-apple-darwin/release/*.wasm" ]; then
-    cp target/x86_64-apple-darwin/release/*.wasm viewer/pkg/macos-wasm_agent.wasm
-fi
-
-echo "Done! WASM binaries copied to viewer/pkg/"
-
-# Update the HTML to use the correct paths
-echo "Updating viewer HTML for platform detection..."
-
-platform="linux"
-if [ "$OSTYPE" == "msys" ] || [ "$OSTYPE" == "win32" ]; then
-    platform="windows"
-elif [ -f "/usr/bin/osascript" ]; then
-    platform="macos"
-fi
-
-cat << EOF > viewer/index.html
-<!DOCTYPE html>
-<html>
+echo "=== Build Complete ==="
+echo "WASM files generated in viewer/pkg/"
 <head>
     <title>WASM Viewer</title>
     <style>
@@ -124,4 +95,3 @@ EOF
 
 echo "HTML updated for platform: $platform"
 echo "Viewer is ready at: viewer/index.html"
-"

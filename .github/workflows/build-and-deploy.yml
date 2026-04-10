@@ -1,0 +1,97 @@
+name: Build and Deploy WASM
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-wasm:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Rust
+        run: |
+          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs -y | sh
+          source $HOME/.cargo/env
+          rustup target add wasm32-unknown-unknown
+
+      - name: Build WASM
+        run: |
+          source $HOME/.cargo/env
+          cargo install wasm-pack
+          cd wasm-agent
+          wasm-pack build --target web --out-dir ../viewer/pkg --out-name wasm_agent
+
+      - name: Build Windows x64
+        uses: actions/setup-win64@v3
+        with:
+          target: x86_64
+
+      - name: Build for Windows
+        uses: actions/setup-windows@v3
+        with:
+          target: x86_64
+          node-version: 18
+        continue-on-error: true
+
+      - name: Build Windows x64 WASM
+        uses: actions/setup-win64@v3
+        with:
+          target: x86_64
+
+      - name: Copy WASM binaries
+        uses: actions/upload-artifact@v4
+        with:
+          name: wasm-pkg
+          path: viewer/pkg/
+
+  deploy:
+    needs: build-wasm
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download WASM binaries
+        uses: actions/download-artifact@v4
+        with:
+          name: wasm-pkg
+          path: viewer/
+
+      - name: Verify deployment
+        run: |
+          ls -la viewer/pkg/
+        working-directory: ${{ github.workspace }}
+
+      - name: Upload viewer artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: viewer-deployment
+          path: viewer/
+
+  test:
+    needs: deploy
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download viewer
+        uses: actions/download-artifact@v4
+        with:
+          name: viewer-deployment
+          path: viewer/
+
+      - name: Verify structure
+        run: |
+          echo "=== Viewer Structure ==="
+          find viewer -type f | head -20
+"

@@ -13,41 +13,19 @@ viewer/
 ├── docs/
 │   └── USAGE.md                    # This file
 └── pkg/
-    ├── linux-wasm_agent.wasm       # Linux x64 WASM binary
-    ├── windows-x64-wasm_agent.wasm # Windows x64 WASM binary
-    └── macos-wasm_agent.wasm       # macOS WASM binary
+    ├── wasm_agent.js               # Generated JavaScript bindings
+    └── wasm_agent_bg.wasm          # WebAssembly binary
 ```
 
 ## Quick Start
-
-### On Linux
 
 1. Open `viewer/index.html` in a web browser
 2. Configure your LLM provider settings (API URL, model, etc.)
 3. Click "Execute Agent" to run tasks
 
-### On Windows
+## Platform Support
 
-1. Open `viewer/index.html` in a web browser
-2. Configure your LLM provider settings
-3. Click "Execute Agent" to run tasks
-
-### On macOS
-
-1. Open `viewer/index.html` in a web browser
-2. Configure your LLM provider settings
-3. Click "Execute Agent" to run tasks
-
-## Platform Detection
-
-The viewer automatically detects your platform using JavaScript:
-
-```javascript
-const platform = navigator.platform.toLowerCase();
-const wasmPath = platform.includes('Win') 
-    ? './windows-x64-wasm_agent.wasm' :
-    platform.includes('Mac') 
-    ? './macos-wasm_agent.wasm' :
+The WASM binary works in all modern web browsers across all platforms.
     './linux-wasm_agent.wasm';
 ```
 
