@@ -1,66 +1,70 @@
-# WASM LLM Agent Viewer
+# WASM Viewer Directory
 
-A WebAssembly-based LLM agent that runs entirely in your browser.
+This directory contains the WebAssembly viewer with platform-specific WASM binaries.
 
-## Quick Start
+## Directory Structure
 
-### Option 1: Run the Server (Recommended)
+```
+viewer/
+├── index.html          # Main viewer HTML page
+├── pkg/
+│   ├── wasm_agent.js       # Generated JavaScript bindings
+│   └── wasm_agent_bg.wasm  # WebAssembly binary
+└── README.md           # This file
+```
 
-**Linux/macOS:**
+## Platform Detection
+
+The viewer uses a universal WASM binary that works in all modern web browsers.
+
+## Building the WASM Binaries
+
+### Using the build scripts
+
+**For Windows (PowerShell):**
+```powershell
+.\build_and_copy_viewer.ps1
+```
+
+**For Linux/macOS (Bash):**
 ```bash
-./start-server.sh
+chmod +x build_and_copy_viewer.sh
+./build_and_copy_viewer.sh
 ```
 
-**Windows:**
-```cmd
-start-server.bat
-```
+### Manual Build Process
 
-Then open http://localhost:8000 in your browser.
+1. **Build for each platform:**
+   ```bash
+   # Linux
+   cargo build --target x86_64-unknown-linux-gnu --release --out-dir target/x86_64-unknown-linux-gnu/release
+   
+   # Windows x64
+   cargo build --target x86_64-pc-windows-msvc --release --out-dir target/x86_64-pc-windows-msvc/release
+   
+   # macOS
+   cargo build --target x86_64-apple-darwin --release --out-dir target/x86_64-apple-darwin/release
+   ```
 
-### Option 2: Manual Serving
+2. **Copy WASM binaries to viewer:**
+   ```bash
+   mkdir -p viewer/pkg
+   cp target/x86_64-unknown-linux-gnu/release/*.wasm viewer/pkg/linux-wasm_agent.wasm
+   cp target/x86_64-pc-windows-msvc/release/*.wasm viewer/pkg/windows-x64-wasm_agent.wasm
+   cp target/x86_64-apple-darwin/release/*.wasm viewer/pkg/macos-wasm_agent.wasm
+   ```
 
-Serve the contents of this directory with any web server:
+3. **Update HTML for your platform:**
+   ```bash
+   ./build_and_copy_viewer.sh
+   ```
 
-```bash
-# Using Python
-python3 -m http.server 8000
+## Using the Viewer
 
-# Using Node.js (if installed)
-npx serve .
+1. Open `viewer/index.html` in a web browser
+2. Configure your LLM provider settings
+3. Click "Execute Agent" to run tasks
 
-# Using PHP
-php -S localhost:8000
-```
+## CI/CD Setup
 
-## Features
-
-- 🤖 Runs entirely in the browser using WebAssembly
-- 🔄 Supports multiple LLM providers (OpenAI API, Ollama)
-- 🛠️ Built-in tool calling capabilities
-- 🌐 Universal WASM binary for all platforms
-
-## Usage
-
-1. Open the viewer in your browser
-2. Select your LLM provider (OpenAI/Ollama)
-3. Configure your API settings
-4. Enter a prompt and click "Execute Agent"
-
-## Supported Providers
-
-- **OpenAI API**: Compatible with OpenAI, Open WebUI, and similar services
-- **Ollama**: Native Ollama API support
-
-## Requirements
-
-- Modern web browser with WebAssembly support
-- Internet connection for LLM API access
-
-## Troubleshooting
-
-### CORS Issues
-If you encounter CORS errors, make sure you're accessing the viewer through a web server (not opening index.html directly).
-
-### WASM Loading Errors
-Ensure your browser supports WebAssembly. Modern versions of Chrome, Firefox, Safari, and Edge all support WASM.
+For automated builds, use the GitHub Actions workflow in `.github/workflows/build-viewer.yml`
