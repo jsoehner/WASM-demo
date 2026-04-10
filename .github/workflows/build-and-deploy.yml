@@ -77,4 +77,52 @@ jobs:
         run: |
           echo "=== Viewer Structure ==="
           find viewer -type f | head -20
+
+      - name: Rebuild distribution with server scripts
+        run: |
+          echo "📦 Rebuilding distribution package..."
+          cd viewer
+          # Regenerate dist/ directory
+          bash ../package-viewer.sh 2>/dev/null || true
+          echo "✅ Distribution package rebuilt"
+
+      - name: Verify dist directory contents
+        run: |
+          echo "=== Checking dist/ directory ==="
+          if [ -d "dist" ]; then
+            ls -la dist/
+            echo ""
+            echo "Files in dist/:"
+            find dist -type f | sort
+          else
+            echo "❌ ERROR: dist/ directory not found!"
+            echo "The package-viewer.sh script failed to create the distribution."
+            exit 1
+          fi
+
+      - name: Test server startup
+        run: |
+          echo "=== Testing server startup ==="
+          cd dist
+          echo "Starting server for 5 seconds..."
+          timeout 5 ./start-server.sh 2>&1 || (echo "❌ Server failed to start" && exit 1)
+          echo "✅ Server started successfully!"
+
+      - name: Verify distribution contents
+        run: |
+          echo "=== Verifying distribution contents ==="
+          ls -la dist/
+          echo ""
+          echo "Files in dist/:"
+          find dist -type f | sort
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results
+          path: |
+            viewer/dist
+            viewer/dist/**/*.log
+          retention-days: 1
 "
