@@ -30,23 +30,6 @@ jobs:
           cd wasm-agent
           wasm-pack build --target web --out-dir ../viewer/pkg --out-name wasm_agent
 
-      - name: Build Windows x64
-        uses: actions/setup-win64@v3
-        with:
-          target: x86_64
-
-      - name: Build for Windows
-        uses: actions/setup-windows@v3
-        with:
-          target: x86_64
-          node-version: 18
-        continue-on-error: true
-
-      - name: Build Windows x64 WASM
-        uses: actions/setup-win64@v3
-        with:
-          target: x86_64
-
       - name: Copy WASM binaries
         uses: actions/upload-artifact@v4
         with:
