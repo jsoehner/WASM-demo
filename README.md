@@ -120,3 +120,52 @@ python3 -m http.server 8000
 ## Development
 
 See [BUILD.md](BUILD.md) for detailed build instructions and architecture notes.
+
+## CI/CD Workflows
+
+The project includes GitHub Actions workflows for automated building and packaging:
+
+### Automated Release Workflow (`build-and-release-viewer.yml`)
+
+**Triggers:**
+- Push to `main` branch (builds and tests)
+- Tag push with `v*` pattern (creates GitHub release)
+- Manual trigger with release type options
+
+**Features:**
+- ✅ Builds WASM module
+- ✅ Creates complete distribution packages
+- ✅ Tests the distribution (server startup, file verification)
+- ✅ Creates GitHub releases with downloadable packages
+- ✅ Supports nightly builds
+
+### Manual Build Workflow (`manual-build-viewer.yml`)
+
+**Triggers:**
+- Manual workflow dispatch only
+
+**Features:**
+- ✅ Builds WASM module
+- ✅ Creates distribution packages
+- ✅ Optional artifact upload
+- ✅ Quick testing without releases
+
+### Using the Workflows
+
+**Manual Build:**
+1. Go to GitHub Actions tab
+2. Select "Manual Build Viewer Packages"
+3. Click "Run workflow"
+4. Optionally enable artifact upload
+5. Download artifacts from the workflow run
+
+**Creating Releases:**
+1. Use the release script: `./release.sh patch` (or `minor`/`major`)
+2. Or manually: `git tag v1.0.0 && git push origin v1.0.0`
+3. The workflow will automatically build, test, and create a GitHub release
+4. Users can download the ZIP/TAR.GZ packages from the release
+
+**Nightly Builds:**
+1. Go to Actions → "Build and Release Viewer Packages"
+2. Click "Run workflow" → Select "nightly" as release type
+3. Creates/updates a "nightly" release with latest code
