@@ -26,7 +26,7 @@ jobs:
       - name: Build Linux WASM
         run: |
           cd wasm-agent
-          cargo build --target wasm32-unknown-unknown --release --out-dir target/wasm32-unknown-unknown/release
+          cargo build --target wasm32-unknown-unknown --release
 
       - name: Copy Linux WASM to Viewer
         run: |
@@ -55,7 +55,7 @@ jobs:
       - name: Build Windows x64 WASM
         run: |
           cd wasm-agent
-          cargo build --target wasm32-unknown-unknown --release --out-dir target/wasm32-unknown-unknown/release
+          cargo build --target wasm32-unknown-unknown --release
 
       - name: Copy Windows x64 WASM to Viewer
         run: |
@@ -84,7 +84,7 @@ jobs:
       - name: Build macOS WASM
         run: |
           cd wasm-agent
-          cargo build --target wasm32-unknown-unknown --release --out-dir target/wasm32-unknown-unknown/release
+          cargo build --target wasm32-unknown-unknown --release
 
       - name: Copy macOS WASM to Viewer
         run: |
