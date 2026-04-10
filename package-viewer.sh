@@ -359,3 +359,15 @@ echo ""
 echo "🚀 To test the distribution:"
 echo "  cd dist && ./start-server.sh"
 echo "  Then open http://localhost:8000"
+# Verify WASM files were copied
+cd \"$DIST_DIR\"
+for f in index.html pkg/wasm_agent.js pkg/wasm_agent_bg.wasm; do
+  if [ ! -f \"$f\" ]; then
+    print_error \"Critical: WASM files not found in dist/$f\"
+    print_error \"Run: wasm-pack build before packaging\"
+    exit 1
+  fi
+done
+print_status \"✅ All WASM files verified in dist/\"
+
+# WASM verification added
