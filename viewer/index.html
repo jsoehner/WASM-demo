@@ -25,9 +25,10 @@
         <div id="log">Ready.</div>
     </div>
     <script type="module">
-        import { Agent } from './pkg/wasm_agent.js';
+        import init, { Agent } from './pkg/wasm_agent.js';
 
-        // WASM initialization is automatic with #[wasm_bindgen(start)]
+        // Initialize WASM
+        await init();
         
         // Use the agent
         document.getElementById('run-btn').addEventListener('click', async () => {
