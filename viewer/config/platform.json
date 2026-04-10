@@ -1,0 +1,5 @@
+{
+    "windows-x64": "./pkg/windows-x64-wasm_agent.wasm",
+    "linux": "./pkg/linux-wasm_agent.wasm",
+    "macos": "./pkg/macos-wasm_agent.wasm"
+}
