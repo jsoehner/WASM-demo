@@ -1,0 +1,35 @@
+# WASM LLM Agent
+# Ignore build artifacts and sensitive data
+
+# Build artifacts
+/target/
+.wasm/
+.wat/
+/pkg/
+
+# Development
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Environment
+.env
+.env.*
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+*.tmp
+*.bak
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE specific
+.project
+.settings
