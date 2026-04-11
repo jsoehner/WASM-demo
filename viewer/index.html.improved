@@ -192,7 +192,8 @@
         <div class="provider-section">
             <div class="form-group">
                 <label for="provider">Select Provider</label>
-                <select id="provider" onchange="saveConfig()">
+                <select id="provider" onchange="onProviderChange(); saveConfig()">
+                    <option value="openrouter">OpenRouter (Free Models)</option>
                     <option value="openai">OpenAI / Open WebUI</option>
                     <option value="ollama">Ollama (Native)</option>
                 </select>
@@ -200,12 +201,12 @@
             
             <div class="form-group">
                 <label for="model-id">Model ID</label>
-                <input type="text" id="model-id" value="llama3" placeholder="e.g., llama3, gpt-4o" oninput="saveConfig()">
+                <input type="text" id="model-id" value="mistralai/mistral-7b-instruct:free" placeholder="e.g., mistralai/mistral-7b-instruct:free" oninput="saveConfig()">
             </div>
             
             <div class="form-group">
                 <label for="api-url">API URL</label>
-                <input type="text" id="api-url" value="http://localhost:11434/api" placeholder="http://localhost:11434/api" oninput="saveConfig()">
+                <input type="text" id="api-url" value="https://openrouter.ai/api/v1" placeholder="https://openrouter.ai/api/v1" oninput="saveConfig()">
             </div>
             
             <div class="form-group full-width">
@@ -239,6 +240,23 @@
     <script>
         // Initialize WASM
         let wasmAgent;
+
+        const PROVIDER_DEFAULTS = {
+            openrouter: { url: 'https://openrouter.ai/api/v1', model: 'mistralai/mistral-7b-instruct:free' },
+            openai:     { url: 'https://api.openai.com/v1',     model: 'gpt-4o-mini' },
+            ollama:     { url: 'http://localhost:11434/api',     model: 'llama3' },
+        };
+
+        function onProviderChange() {
+            const provider = document.getElementById('provider').value;
+            const defaults = PROVIDER_DEFAULTS[provider];
+            if (defaults) {
+                document.getElementById('api-url').value = defaults.url;
+                document.getElementById('model-id').value = defaults.model;
+            }
+            // Reset agent so it is re-created with the new provider settings
+            wasmAgent = null;
+        }
         
         async function init() {
             try {

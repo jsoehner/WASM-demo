@@ -115,7 +115,7 @@ impl Agent {
             });
             (url, body.to_string())
         } else {
-            // OpenAI-compatible (also covers Open WebUI, LM Studio, etc.)
+            // OpenAI-compatible (covers OpenRouter, OpenAI, Open WebUI, LM Studio, etc.)
             let url = format!("{}/chat/completions", self.api_url.trim_end_matches('/'));
             let body = serde_json::json!({
                 "model": model,
@@ -134,6 +134,14 @@ impl Agent {
             headers
                 .set("Authorization", &format!("Bearer {}", self.api_key))
                 .map_err(|_| JsValue::from_str("Failed to set Authorization header"))?;
+        }
+        if self.provider == "openrouter" {
+            headers
+                .set("HTTP-Referer", &self.api_url)
+                .map_err(|_| JsValue::from_str("Failed to set HTTP-Referer header"))?;
+            headers
+                .set("X-Title", "WASM Agent")
+                .map_err(|_| JsValue::from_str("Failed to set X-Title header"))?;
         }
 
         let opts = RequestInit::new();

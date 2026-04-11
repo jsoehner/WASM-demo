@@ -147,12 +147,13 @@
         
         <div class="config-section">
             <h4>🔧 Provider Configuration</h4>
-            <select id="provider">
+            <select id="provider" onchange="onProviderChange()">
+                <option value="openrouter">OpenRouter (Free Models)</option>
                 <option value="openai">OpenAI / Open WebUI</option>
                 <option value="ollama">Ollama (Native)</option>
             </select>
-            <input type="text" id="model-id" value="llama3" placeholder="Model ID" />
-            <input type="text" id="api-url" value="http://localhost:11434/api" placeholder="API URL" />
+            <input type="text" id="model-id" value="mistralai/mistral-7b-instruct:free" placeholder="Model ID" />
+            <input type="text" id="api-url" value="https://openrouter.ai/api/v1" placeholder="API URL" />
             <input type="password" id="api-key" placeholder="API Key (Optional)" />
             <div class="help-text">Leave empty to use default settings. For OpenAI API, include full endpoint URL.</div>
         </div>
@@ -275,6 +276,23 @@
             }
         }
         
+        const PROVIDER_DEFAULTS = {
+            openrouter: { url: 'https://openrouter.ai/api/v1', model: 'mistralai/mistral-7b-instruct:free' },
+            openai:     { url: 'https://api.openai.com/v1',     model: 'gpt-4o-mini' },
+            ollama:     { url: 'http://localhost:11434/api',     model: 'llama3' },
+        };
+
+        function onProviderChange() {
+            const provider = document.getElementById('provider').value;
+            const defaults = PROVIDER_DEFAULTS[provider];
+            if (defaults) {
+                document.getElementById('api-url').value = defaults.url;
+                document.getElementById('model-id').value = defaults.model;
+            }
+            // Reset agent so it is re-created with the new provider settings
+            agentInstance = null;
+        }
+
         // Event listeners
         document.getElementById('run-btn').addEventListener('click', runAgent);
         
