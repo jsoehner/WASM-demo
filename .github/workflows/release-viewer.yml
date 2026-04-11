@@ -1,0 +1,91 @@
+name: Release Viewer Package
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Release version (e.g. 1.2.3 — no leading v)"
+        required: true
+
+permissions:
+  contents: write
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  release:
+    name: Build and Release Viewer
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+
+      - name: Cache Rust dependencies
+        uses: Swatinem/rust-cache@v2
+
+      - name: Install wasm-pack
+        run: cargo install --locked wasm-pack
+
+      - name: Resolve version
+        id: version
+        run: |
+          if [[ "$GITHUB_EVENT_NAME" == "push" ]]; then
+            VERSION="${GITHUB_REF_NAME#v}"
+          else
+            VERSION="${{ github.event.inputs.version }}"
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Build and package viewer
+        run: |
+          chmod +x build.sh package.sh
+          ./package.sh
+
+      - name: Rename archive to versioned name
+        id: archive
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          SRC="$(ls wasm-agent-viewer-*.zip wasm-agent-viewer-*.tar.gz 2>/dev/null | head -n1)"
+          if [[ -z "$SRC" ]]; then
+            echo "No archive produced by package.sh" >&2
+            exit 1
+          fi
+          if [[ "$SRC" == *.tar.gz ]]; then
+            DEST="wasm-agent-viewer-${VERSION}.tar.gz"
+          else
+            DEST="wasm-agent-viewer-${VERSION}.zip"
+          fi
+          mv "$SRC" "$DEST"
+          echo "path=$DEST" >> "$GITHUB_OUTPUT"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: "v${{ steps.version.outputs.version }}"
+          name: "WASM Agent Viewer v${{ steps.version.outputs.version }}"
+          body: |
+            ## WASM Agent Viewer v${{ steps.version.outputs.version }}
+
+            Download the archive below, extract it, then start the local server:
+
+            | Platform | Command |
+            |----------|---------|
+            | Linux / macOS | `./start-server.sh` |
+            | Windows cmd | `start-server.bat` |
+            | Windows PowerShell | `./start-server.ps1` |
+
+            Then open **http://localhost:8000** in any modern browser.
+          files: "${{ steps.archive.outputs.path }}"
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
