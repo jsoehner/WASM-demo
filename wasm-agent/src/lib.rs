@@ -137,9 +137,6 @@ impl Agent {
         }
         if self.provider == "openrouter" {
             headers
-                .set("HTTP-Referer", &self.api_url)
-                .map_err(|_| JsValue::from_str("Failed to set HTTP-Referer header"))?;
-            headers
                 .set("X-Title", "WASM Agent")
                 .map_err(|_| JsValue::from_str("Failed to set X-Title header"))?;
         }
