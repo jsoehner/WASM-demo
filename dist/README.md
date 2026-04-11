@@ -1,70 +1,201 @@
-# WASM Viewer Directory
+# WASM LLM Agent Viewer
 
-This directory contains the WebAssembly viewer with platform-specific WASM binaries.
+A WebAssembly-based LLM agent that runs entirely in your browser.
+
+## Features
+
+- **Runs entirely in the browser** using WebAssembly (no server needed)
+- **Multiple LLM providers**: OpenAI API, Ollama (native)
+- **Built-in tool calling**: Text analysis and more
+- **Modern UI** with status indicators and error handling
+- **Universal WASM** — works on any platform
 
 ## Directory Structure
 
 ```
-viewer/
-├── index.html          # Main viewer HTML page
+dist/
+├── index.html              # Main viewer HTML page
 ├── pkg/
 │   ├── wasm_agent.js       # Generated JavaScript bindings
-│   └── wasm_agent_bg.wasm  # WebAssembly binary
-└── README.md           # This file
+│   ├── wasm_agent_bg.wasm  # WebAssembly binary
+│   ├── wasm_agent.d.ts     # TypeScript definitions
+│   └── package.json
+└── README.md               # This file
 ```
 
-## Platform Detection
+## Quick Start
 
-The viewer uses a universal WASM binary that works in all modern web browsers.
+### Option 1: Run the Server (Recommended)
 
-## Building the WASM Binaries
+WASM ES-module imports require HTTP — opening `index.html` directly with
+`file://` will not work.
 
-### Using the build scripts
-
-**For Windows (PowerShell):**
-```powershell
-.\build_and_copy_viewer.ps1
-```
-
-**For Linux/macOS (Bash):**
+**Linux/macOS:**
 ```bash
-chmod +x build_and_copy_viewer.sh
-./build_and_copy_viewer.sh
+./start-server.sh
 ```
 
-### Manual Build Process
+**Windows (cmd):**
+```cmd
+start-server.bat
+```
 
-1. **Build for each platform:**
-   ```bash
-   # Linux
-   cargo build --target x86_64-unknown-linux-gnu --release --out-dir target/x86_64-unknown-linux-gnu/release
-   
-   # Windows x64
-   cargo build --target x86_64-pc-windows-msvc --release --out-dir target/x86_64-pc-windows-msvc/release
-   
-   # macOS
-   cargo build --target x86_64-apple-darwin --release --out-dir target/x86_64-apple-darwin/release
-   ```
+**Windows (PowerShell):**
+```powershell
+.\start-server.ps1
+```
 
-2. **Copy WASM binaries to viewer:**
-   ```bash
-   mkdir -p viewer/pkg
-   cp target/x86_64-unknown-linux-gnu/release/*.wasm viewer/pkg/linux-wasm_agent.wasm
-   cp target/x86_64-pc-windows-msvc/release/*.wasm viewer/pkg/windows-x64-wasm_agent.wasm
-   cp target/x86_64-apple-darwin/release/*.wasm viewer/pkg/macos-wasm_agent.wasm
-   ```
+Then open http://localhost:8000 in your browser.
 
-3. **Update HTML for your platform:**
-   ```bash
-   ./build_and_copy_viewer.sh
-   ```
+### Option 2: Manual Serving
 
-## Using the Viewer
+Serve the contents of this directory with any web server:
 
-1. Open `viewer/index.html` in a web browser
-2. Configure your LLM provider settings
-3. Click "Execute Agent" to run tasks
+```bash
+# Python (any platform)
+python3 -m http.server 8000
 
-## CI/CD Setup
+# Node.js
+npx serve .
 
-For automated builds, use the GitHub Actions workflow in `.github/workflows/build-viewer.yml`
+# PHP
+php -S localhost:8000
+```
+
+## Configuration
+
+### Provider Settings
+
+| Field | Description | Example |
+|-------|-------------|---------|
+| Provider | Select LLM provider | OpenAI / Ollama |
+| Model ID | Your LLM model | llama3, mistral |
+| API URL | API endpoint | http://localhost:11434/api |
+| API Key | Your API key (optional) | sk-*** |
+
+### Tool Usage
+
+The agent supports built-in tools using this syntax:
+
+```
+[TOOL: calculate_length:<text>]
+```
+
+## Available Tools
+
+- **calculate_length** — returns the character count of the given text
+
+## Supported Providers
+
+### OpenAI-compatible
+- OpenAI API, Open WebUI, LM Studio, Azure OpenAI Service, and any
+   other OpenAI-API-compatible endpoint.
+
+### Ollama (Native)
+- Run directly with a local Ollama instance. No API key required.
+
+## Requirements
+
+### Browser
+- Chrome, Firefox, Safari, or Edge (any current version)
+- WebAssembly + ES Modules support (ES2020+)
+
+### API
+- Access to an LLM API endpoint
+- Valid API credentials (if required by the provider)
+
+## Troubleshooting
+
+### WASM Loading Errors
+
+**Symptom:** `Failed to load WASM module`
+
+- Make sure you are serving over HTTP, not `file://`
+- Verify the `pkg/` directory contains `wasm_agent.js` and
+   `wasm_agent_bg.wasm`
+- Rebuild if needed (see **Building from Source** below)
+
+### CORS Errors
+
+**Symptom:** `CORS policy blocked request`
+
+- Serve via `http://localhost`, not `file://`
+- Check the CORS settings on your API server
+
+### API Connection Failed
+
+**Symptom:** `HTTP 401 Unauthorized`
+
+- Verify the API key is correct
+- Confirm the API URL is reachable
+- Ensure the LLM service is running
+
+### Model Not Found
+
+**Symptom:** `Model 'xxxx' not found`
+
+- List available models on your API server
+- For Ollama: `ollama pull <model-name>`
+
+### Slow Performance
+
+- Close unused browser tabs
+- Try a lighter/smaller model
+- Check your network connection
+
+## Building from Source
+
+The WASM binary in `pkg/` is universal — the same file works in Chrome,
+Firefox, Safari, and Edge on Windows, macOS, and Linux.
+
+**Prerequisites (one-time):**
+```bash
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+rustup target add wasm32-unknown-unknown
+cargo install wasm-pack
+```
+
+**Build:**
+
+Linux / macOS:
+```bash
+./build.sh
+```
+
+Windows:
+```powershell
+.\build.ps1
+```
+
+**Build + package into a distributable zip:**
+
+Linux / macOS:
+```bash
+./package.sh
+```
+
+Windows:
+```powershell
+.\package.ps1
+```
+
+## CI/CD
+
+Automated build and release workflows are in `.github/workflows/`:
+
+| File | Trigger |
+|------|---------|
+| `build-and-deploy.yml` | Push to main |
+| `build-and-release-viewer.yml` | Tag push (`v*`) or manual |
+| `manual-build-viewer.yml` | Manual dispatch |
+
+## Security Notes
+
+- API keys are never sent outside your chosen LLM provider
+- The viewer runs entirely in your browser — no backend server
+- Clear browser storage (DevTools → Application → Local Storage) to
+   remove any saved configuration
+
+## License
+
+MIT License

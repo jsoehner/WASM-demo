@@ -5,117 +5,66 @@ on:
     branches:
       - main
   pull_request:
+  workflow_dispatch:
 
 permissions:
   contents: read
 
 jobs:
-  build-linux-wasm:
-    name: Build Linux WASM
+  build-wasm-matrix:
+    name: Build WASM (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+
+      - name: Cache Rust dependencies
+        uses: Swatinem/rust-cache@v2
+
+      - name: Install wasm-pack
+        run: cargo install --locked wasm-pack
+
+      - name: Build WASM package
+        shell: bash
+        run: bash build.sh
+
+      - name: Upload OS-specific artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: wasm-pkg-${{ matrix.os }}
+          path: viewer/pkg/
+
+  aggregate-viewer-artifacts:
+    name: Aggregate Viewer Artifacts
+    needs: build-wasm-matrix
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Install Rust
-        run: |
-          rustup update stable
-          rustup target add wasm32-unknown-unknown
-
-      - name: Build Linux WASM
-        run: |
-          cd wasm-agent
-          cargo build --target wasm32-unknown-unknown --release
-
-      - name: Copy Linux WASM to Viewer
-        run: |
-          mkdir -p viewer/pkg
-          cp wasm-agent/target/wasm32-unknown-unknown/release/*.wasm viewer/pkg/linux-wasm_agent.wasm
-
-      - name: Upload Linux WASM Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: linux-wasm-viewer
-          path: viewer/pkg/linux-wasm_agent.wasm
-
-  build-windows-x64-wasm:
-    name: Build Windows x64 WASM
-    runs-on: windows-latest
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Install Rust
-        run: |
-          rustup update stable
-          rustup target add wasm32-unknown-unknown
-
-      - name: Build Windows x64 WASM
-        run: |
-          cd wasm-agent
-          cargo build --target wasm32-unknown-unknown --release
-
-      - name: Copy Windows x64 WASM to Viewer
-        run: |
-          mkdir -p viewer\pkg
-          copy wasm-agent\target\wasm32-unknown-unknown\release\*.wasm viewer\pkg\windows-x64-wasm_agent.wasm
-
-      - name: Upload Windows x64 WASM Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: windows-x64-wasm-viewer
-          path: viewer\pkg\windows-x64-wasm_agent.wasm
-
-  build-macos-wasm:
-    name: Build macOS WASM
-    runs-on: macos-latest
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Install Rust
-        run: |
-          rustup update stable
-          rustup target add wasm32-unknown-unknown
-
-      - name: Build macOS WASM
-        run: |
-          cd wasm-agent
-          cargo build --target wasm32-unknown-unknown --release
-
-      - name: Copy macOS WASM to Viewer
-        run: |
-          mkdir -p viewer/pkg
-          cp wasm-agent/target/wasm32-unknown-unknown/release/*.wasm viewer/pkg/macos-wasm_agent.wasm
-
-      - name: Upload macOS WASM Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: macos-wasm-viewer
-          path: viewer/pkg/macos-wasm_agent.wasm
-
-  build-all-viewer-artifacts:
-    name: Build All Viewer Artifacts
-    runs-on: ubuntu-latest
-    needs: [build-linux-wasm, build-windows-x64-wasm, build-macos-wasm]
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
       - name: Download all artifacts
         uses: actions/download-artifact@v4
         with:
-          path: viewer/pkg
-          pattern: '.*-wasm-viewer'
-          merge-multiple: true
+          path: artifacts/
+          pattern: wasm-pkg-*
 
-      - name: Upload Viewer Package
+      - name: Verify artifact structure
+        run: |
+          set -euo pipefail
+          find artifacts -maxdepth 3 -type f | sort
+          test -n "$(find artifacts -type f -name wasm_agent.js | head -n1)"
+          test -n "$(find artifacts -type f -name wasm_agent_bg.wasm | head -n1)"
+
+      - name: Upload combined artifact bundle
         uses: actions/upload-artifact@v4
         with:
           name: viewer-package
-          path: viewer/
-"
+          path: artifacts/

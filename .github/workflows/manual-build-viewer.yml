@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       upload_artifacts:
-        description: 'Upload build artifacts'
+        description: Upload build artifacts
         required: false
         default: true
         type: boolean
@@ -33,28 +33,18 @@ jobs:
         uses: Swatinem/rust-cache@v2
 
       - name: Install wasm-pack
-        run: cargo install wasm-pack
+        run: cargo install --locked wasm-pack
 
-      - name: Build WASM module
+      - name: Make scripts executable
+        run: chmod +x build.sh package.sh
+
+      - name: Build and package
+        run: ./package.sh
+
+      - name: List generated archives
         run: |
-          cd wasm-agent
-          wasm-pack build --target web --out-dir ../viewer/pkg --out-name wasm_agent
-
-      - name: Make packaging scripts executable
-        run: |
-          chmod +x package-viewer.sh
-          chmod +x build-and-package.sh
-
-      - name: Create distribution package
-        run: ./package-viewer.sh
-
-      - name: List distribution contents
-        run: |
-          echo "=== Distribution Directory ==="
-          ls -la dist/
-          echo ""
-          echo "=== Archive Files ==="
-          ls -la *.zip *.tar.gz 2>/dev/null || true
+          ls -la wasm-agent-viewer-*.zip 2>/dev/null || true
+          ls -la wasm-agent-viewer-*.tar.gz 2>/dev/null || true
 
       - name: Upload distribution artifacts
         if: inputs.upload_artifacts
@@ -62,23 +52,7 @@ jobs:
         with:
           name: viewer-distribution-${{ github.run_id }}
           path: |
-            dist/
             wasm-agent-viewer-*.zip
             wasm-agent-viewer-*.tar.gz
-          retention-days: 7
-
-      - name: Upload individual packages
-        if: inputs.upload_artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: viewer-zip-package
-          path: wasm-agent-viewer-*.zip
-          retention-days: 7
-
-      - name: Upload TAR.GZ package
-        if: inputs.upload_artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: viewer-tar-gz-package
-          path: wasm-agent-viewer-*.tar.gz
+          if-no-files-found: error
           retention-days: 7

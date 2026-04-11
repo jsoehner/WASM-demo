@@ -5,16 +5,16 @@ on:
     branches:
       - main
     tags:
-      - 'v*'
+      - "v*"
   pull_request:
     branches:
       - main
   workflow_dispatch:
     inputs:
       release_type:
-        description: 'Release type'
+        description: "Release type"
         required: false
-        default: 'beta'
+        default: beta
         type: choice
         options:
           - beta
@@ -46,51 +46,27 @@ jobs:
         uses: Swatinem/rust-cache@v2
 
       - name: Install wasm-pack
-        run: cargo install wasm-pack
+        run: cargo install --locked wasm-pack
 
-      - name: Build WASM module
+      - name: Make build scripts executable
+        run: chmod +x build.sh package.sh
+
+      - name: Build and create package archive
+        run: ./package.sh
+
+      - name: List generated archives
         run: |
-          cd wasm-agent
-          wasm-pack build --target web --out-dir ../viewer/pkg --out-name wasm_agent
-
-      - name: Make packaging scripts executable
-        run: |
-          chmod +x package-viewer.sh
-          chmod +x build-and-package.sh
-
-      - name: Create distribution package
-        run: ./package-viewer.sh
-
-      - name: List distribution contents
-        run: |
-          echo "=== Distribution Directory ==="
-          ls -la dist/
-          echo ""
-          echo "=== Archive Files ==="
-          ls -la *.zip *.tar.gz 2>/dev/null || true
+          ls -la wasm-agent-viewer-*.zip 2>/dev/null || true
+          ls -la wasm-agent-viewer-*.tar.gz 2>/dev/null || true
 
       - name: Upload distribution artifacts
         uses: actions/upload-artifact@v4
         with:
           name: viewer-distribution-${{ github.run_id }}
           path: |
-            dist/
             wasm-agent-viewer-*.zip
             wasm-agent-viewer-*.tar.gz
-          retention-days: 30
-
-      - name: Upload individual packages
-        uses: actions/upload-artifact@v4
-        with:
-          name: viewer-zip-package
-          path: wasm-agent-viewer-*.zip
-          retention-days: 30
-
-      - name: Upload TAR.GZ package
-        uses: actions/upload-artifact@v4
-        with:
-          name: viewer-tar-gz-package
-          path: wasm-agent-viewer-*.tar.gz
+          if-no-files-found: error
           retention-days: 30
 
   test-distribution:
@@ -99,72 +75,55 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
       - name: Download distribution artifacts
         uses: actions/download-artifact@v4
         with:
           name: viewer-distribution-${{ github.run_id }}
           path: test-dist/
 
-      - name: Extract and test distribution
+      - name: Extract package and verify contents
         run: |
-          cd test-dist
-          ls -la
-
-          # Test server startup (briefly)
-          echo "Testing server startup..."
-          timeout 3 ./start-server.sh &
-          sleep 2
-
-          # Check if server is running
-          if curl -f http://localhost:8000 > /dev/null 2>&1; then
-            echo "✅ Server started successfully"
+          set -euo pipefail
+          ARCHIVE="$(ls test-dist/wasm-agent-viewer-*.zip 2>/dev/null | head -n1 || true)"
+          if [ -n "$ARCHIVE" ]; then
+            unzip -q "$ARCHIVE" -d extracted
           else
-            echo "❌ Server failed to start"
-            exit 1
-          fi
-
-          # Kill the server
-          pkill -f "python3 -m http.server" || true
-
-      - name: Verify package contents
-        run: |
-          cd test-dist
-
-          # Check for required files
-          required_files=(
-            "index.html"
-            "pkg/wasm_agent.js"
-            "pkg/wasm_agent_bg.wasm"
-            "start-server.sh"
-            "README.md"
-            "electron-app/package.json"
-            "electron-app/main.js"
-          )
-
-          for file in "${required_files[@]}"; do
-            if [ -f "$file" ]; then
-              echo "✅ Found: $file"
-            else
-              echo "❌ Missing: $file"
+            ARCHIVE="$(ls test-dist/wasm-agent-viewer-*.tar.gz 2>/dev/null | head -n1 || true)"
+            if [ -z "$ARCHIVE" ]; then
+              echo "No distribution archive found"
               exit 1
             fi
-          done
+            tar -xzf "$ARCHIVE" -C extracted
+          fi
 
-          echo "✅ All required files present"
+          PKG_DIR="$(find extracted -maxdepth 1 -type d -name 'wasm-agent-viewer-*' | head -n1)"
+          test -n "$PKG_DIR"
+
+          test -f "$PKG_DIR/index.html"
+          test -f "$PKG_DIR/pkg/wasm_agent.js"
+          test -f "$PKG_DIR/pkg/wasm_agent_bg.wasm"
+          test -f "$PKG_DIR/start-server.sh"
+          test -f "$PKG_DIR/start-server.bat"
+          test -f "$PKG_DIR/start-server.ps1"
+
+      - name: Test server startup
+        run: |
+          set -euo pipefail
+          PKG_DIR="$(find extracted -maxdepth 1 -type d -name 'wasm-agent-viewer-*' | head -n1)"
+          timeout 8 bash "$PKG_DIR/start-server.sh" >/tmp/server.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill $SERVER_PID || true' EXIT
+          sleep 2
+          curl -fsS http://localhost:8000/index.html >/dev/null
+          kill $SERVER_PID || true
 
   create-release:
     name: Create GitHub Release
     needs: [build-and-package, test-distribution]
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' && contains(github.ref, 'refs/tags/v')
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
       - name: Download release artifacts
         uses: actions/download-artifact@v4
         with:
@@ -175,43 +134,18 @@ jobs:
         id: get_version
         run: |
           VERSION=${GITHUB_REF#refs/tags/v}
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
-          echo "Version: $VERSION"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
 
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.ref_name }}
-          name: "WASM Agent Viewer ${{ steps.get_version.outputs.version }}"
+          name: WASM Agent Viewer ${{ steps.get_version.outputs.version }}
           body: |
-            ## 🚀 WASM Agent Viewer ${{ steps.get_version.outputs.version }}
+            WASM Agent Viewer ${{ steps.get_version.outputs.version }}
 
-            A WebAssembly-based LLM agent that runs entirely in your browser.
-
-            ### 📦 Downloads
-
-            - **ZIP Package**: `wasm-agent-viewer-${{ steps.get_version.outputs.version }}.zip`
-            - **TAR.GZ Package**: `wasm-agent-viewer-${{ steps.get_version.outputs.version }}.tar.gz`
-
-            ### 🎯 Quick Start
-
-            1. Download and extract the package
-            2. Run `./start-server.sh` (Linux/macOS) or `start-server.bat` (Windows)
-            3. Open http://localhost:8000 in your browser
-
-            ### ✨ Features
-
-            - 🤖 Runs entirely in the browser using WebAssembly
-            - 🔄 Supports multiple LLM providers (OpenAI API, Ollama)
-            - 🛠️ Built-in tool calling capabilities
-            - 🌐 Universal WASM binary for all platforms
-            - 🖥️ Desktop app wrapper included
-
-            ### 📋 Requirements
-
-            - Modern web browser with WebAssembly support
-            - Internet connection for LLM API access
-
+            Download and extract the package, run the included start script,
+            then open http://localhost:8000 in your browser.
           files: |
             release-artifacts/wasm-agent-viewer-*.zip
             release-artifacts/wasm-agent-viewer-*.tar.gz
@@ -225,9 +159,6 @@ jobs:
     if: github.event_name == 'workflow_dispatch' && github.event.inputs.release_type == 'nightly'
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
       - name: Download release artifacts
         uses: actions/download-artifact@v4
         with:
@@ -238,43 +169,15 @@ jobs:
         id: get_date
         run: |
           DATE=$(date +%Y%m%d)
-          echo "date=$DATE" >> $GITHUB_OUTPUT
-
-      - name: Delete existing nightly release
-        uses: softprops/action-gh-release@v1
-        with:
-          tag_name: nightly
-          delete_attached_files: true
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        continue-on-error: true
+          echo "date=$DATE" >> "$GITHUB_OUTPUT"
 
       - name: Create Nightly Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           tag_name: nightly
-          name: "WASM Agent Viewer Nightly ${{ steps.get_date.outputs.date }}"
+          name: WASM Agent Viewer Nightly ${{ steps.get_date.outputs.date }}
           body: |
-            ## 🌙 WASM Agent Viewer Nightly Build
-
-            Latest development build of the WASM Agent Viewer.
-
-            ### 📦 Downloads
-
-            - **ZIP Package**: `wasm-agent-viewer-${{ steps.get_date.outputs.date }}.zip`
-            - **TAR.GZ Package**: `wasm-agent-viewer-${{ steps.get_date.outputs.date }}.tar.gz`
-
-            ### ⚠️ Warning
-
-            This is a nightly build and may contain bugs or incomplete features.
-            Use at your own risk!
-
-            ### 🎯 Quick Start
-
-            1. Download and extract the package
-            2. Run `./start-server.sh` (Linux/macOS) or `start-server.bat` (Windows)
-            3. Open http://localhost:8000 in your browser
-
+            Latest nightly build of the WASM Agent Viewer.
           files: |
             nightly-artifacts/wasm-agent-viewer-*.zip
             nightly-artifacts/wasm-agent-viewer-*.tar.gz

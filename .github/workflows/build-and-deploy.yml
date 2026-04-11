@@ -17,24 +17,29 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install Rust
-        run: |
-          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs -y | sh
-          source $HOME/.cargo/env
-          rustup target add wasm32-unknown-unknown
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
 
-      - name: Build WASM
-        run: |
-          source $HOME/.cargo/env
-          cargo install wasm-pack
-          cd wasm-agent
-          wasm-pack build --target web --out-dir ../viewer/pkg --out-name wasm_agent
+      - name: Cache Rust dependencies
+        uses: Swatinem/rust-cache@v2
 
-      - name: Copy WASM binaries
+      - name: Install wasm-pack
+        run: cargo install --locked wasm-pack
+
+      - name: Build WASM package
+        run: bash build.sh
+
+      - name: Upload WASM files
         uses: actions/upload-artifact@v4
         with:
           name: wasm-pkg
-          path: viewer/pkg/
+          path: |
+            viewer/pkg/wasm_agent.js
+            viewer/pkg/wasm_agent_bg.wasm
+            viewer/pkg/wasm_agent.d.ts
+            viewer/pkg/wasm_agent_bg.wasm.d.ts
 
   deploy:
     needs: build-wasm
@@ -43,86 +48,60 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Download WASM binaries
+      - name: Download WASM files
         uses: actions/download-artifact@v4
         with:
           name: wasm-pkg
-          path: viewer/
+          path: downloaded/
 
-      - name: Verify deployment
+      - name: Assemble deployment directory
         run: |
-          ls -la viewer/pkg/
-        working-directory: ${{ github.workspace }}
+          set -euo pipefail
+          mkdir -p deployment/pkg
+          cp viewer/index.html deployment/
 
-      - name: Upload viewer artifact
+          for f in wasm_agent.js wasm_agent_bg.wasm wasm_agent.d.ts wasm_agent_bg.wasm.d.ts; do
+            src="$(find downloaded -type f -name "$f" | head -n1 || true)"
+            if [ -z "$src" ]; then
+              echo "Missing artifact file: $f"
+              exit 1
+            fi
+            cp "$src" "deployment/pkg/$f"
+          done
+
+          ls -la deployment/pkg
+
+      - name: Upload deployment artifact
         uses: actions/upload-artifact@v4
         with:
           name: viewer-deployment
-          path: viewer/
+          path: deployment/
 
   test:
     needs: deploy
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Download viewer
+      - name: Download deployment
         uses: actions/download-artifact@v4
         with:
           name: viewer-deployment
-          path: viewer/
+          path: deployment/
 
-      - name: Verify structure
+      - name: Verify deployment structure
         run: |
-          echo "=== Viewer Structure ==="
-          find viewer -type f | head -20
+          set -euo pipefail
+          test -f deployment/index.html
+          test -f deployment/pkg/wasm_agent.js
+          test -f deployment/pkg/wasm_agent_bg.wasm
+          test -f deployment/pkg/wasm_agent.d.ts
+          test -f deployment/pkg/wasm_agent_bg.wasm.d.ts
 
-      - name: Rebuild distribution with server scripts
+      - name: Test local server startup
         run: |
-          echo "📦 Rebuilding distribution package..."
-          cd viewer
-          # Regenerate dist/ directory
-          bash ../package-viewer.sh 2>/dev/null || true
-          echo "✅ Distribution package rebuilt"
-
-      - name: Verify dist directory contents
-        run: |
-          echo "=== Checking dist/ directory ==="
-          if [ -d "dist" ]; then
-            ls -la dist/
-            echo ""
-            echo "Files in dist/:"
-            find dist -type f | sort
-          else
-            echo "❌ ERROR: dist/ directory not found!"
-            echo "The package-viewer.sh script failed to create the distribution."
-            exit 1
-          fi
-
-      - name: Test server startup
-        run: |
-          echo "=== Testing server startup ==="
-          cd dist
-          echo "Starting server for 5 seconds..."
-          timeout 5 ./start-server.sh 2>&1 || (echo "❌ Server failed to start" && exit 1)
-          echo "✅ Server started successfully!"
-
-      - name: Verify distribution contents
-        run: |
-          echo "=== Verifying distribution contents ==="
-          ls -la dist/
-          echo ""
-          echo "Files in dist/:"
-          find dist -type f | sort
-
-      - name: Upload test results
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: test-results
-          path: |
-            viewer/dist
-            viewer/dist/**/*.log
-          retention-days: 1
-"
+          set -euo pipefail
+          python3 -m http.server 8000 --directory deployment >/tmp/server.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill $SERVER_PID || true' EXIT
+          sleep 2
+          curl -fsS http://localhost:8000/index.html >/dev/null
+          kill $SERVER_PID || true
