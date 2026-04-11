@@ -40,6 +40,21 @@ try {
     Copy-Item "viewer\pkg\wasm_agent_bg.wasm.d.ts" "$packageName\pkg\"
     Copy-Item "viewer\pkg\package.json"            "$packageName\pkg\"
 
+    $requiredFiles = @(
+        "$packageName\index.html",
+        "$packageName\pkg\wasm_agent.js",
+        "$packageName\pkg\wasm_agent_bg.wasm",
+        "$packageName\pkg\wasm_agent.d.ts",
+        "$packageName\pkg\wasm_agent_bg.wasm.d.ts",
+        "$packageName\pkg\package.json"
+    )
+
+    foreach ($f in $requiredFiles) {
+        if (-not (Test-Path $f)) {
+            throw "Missing required package file: $f"
+        }
+    }
+
     # ── start-server.sh (Linux / macOS) ────────────────────────────────────
     @'
 #!/usr/bin/env bash

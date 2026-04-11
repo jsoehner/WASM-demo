@@ -5,9 +5,26 @@
 1. **Install** (one-time)
    ```bash
    ./build-and-package.sh
-   cd dist && ./start-server.sh
+   unzip wasm-agent-viewer-*.zip
+   cd wasm-agent-viewer-* && ./start-server.sh
    ```
    Open `http://localhost:8000` in your browser.
+
+## Build and Packaging Scripts
+
+- Canonical:
+   - `./build.sh` / `.\build.ps1`
+   - `./package.sh` / `.\package.ps1`
+- Convenience wrapper:
+   - `./build-and-package.sh`
+- Compatibility wrapper:
+   - `./package-viewer.sh` (delegates to `./package.sh`)
+
+Deprecated scripts:
+
+- `build_and_copy_viewer.sh`
+- `build_and_run_agent.sh`
+- `build_and_run_agent.ps1`
 
 2. **Use**
    - Select provider (OpenAI/Ollama)

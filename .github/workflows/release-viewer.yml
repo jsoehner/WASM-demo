@@ -1,9 +1,6 @@
-name: Release Viewer Package
+name: Release Viewer Package (Legacy Manual)
 
 on:
-  push:
-    tags:
-      - "v*"
   workflow_dispatch:
     inputs:
       version:
@@ -24,6 +21,11 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: Notice
+        run: |
+          echo "This is a legacy manual release workflow."
+          echo "Canonical tag-based releases are handled by build-and-release-viewer.yml."
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable

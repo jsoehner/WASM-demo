@@ -1,70 +1,51 @@
 # WASM Viewer Directory
 
-This directory contains the WebAssembly viewer with platform-specific WASM binaries.
+This directory contains the browser UI and the generated WASM package used at runtime.
 
 ## Directory Structure
 
-```
+```text
 viewer/
-├── index.html          # Main viewer HTML page
+├── index.html
 ├── pkg/
-│   ├── wasm_agent.js       # Generated JavaScript bindings
-│   └── wasm_agent_bg.wasm  # WebAssembly binary
-└── README.md           # This file
+│   ├── wasm_agent.js
+│   ├── wasm_agent_bg.wasm
+│   ├── wasm_agent.d.ts
+│   └── wasm_agent_bg.wasm.d.ts
+└── README.md
 ```
 
-## Platform Detection
+## Build Flow
 
-The viewer uses a universal WASM binary that works in all modern web browsers.
+Generate `pkg/` from the Rust crate:
 
-## Building the WASM Binaries
+Linux/macOS:
 
-### Using the build scripts
-
-**For Windows (PowerShell):**
-```powershell
-.\build_and_copy_viewer.ps1
-```
-
-**For Linux/macOS (Bash):**
 ```bash
-chmod +x build_and_copy_viewer.sh
-./build_and_copy_viewer.sh
+./build.sh
 ```
 
-### Manual Build Process
+Windows:
 
-1. **Build for each platform:**
-   ```bash
-   # Linux
-   cargo build --target x86_64-unknown-linux-gnu --release --out-dir target/x86_64-unknown-linux-gnu/release
-   
-   # Windows x64
-   cargo build --target x86_64-pc-windows-msvc --release --out-dir target/x86_64-pc-windows-msvc/release
-   
-   # macOS
-   cargo build --target x86_64-apple-darwin --release --out-dir target/x86_64-apple-darwin/release
-   ```
+```powershell
+.\build.ps1
+```
 
-2. **Copy WASM binaries to viewer:**
-   ```bash
-   mkdir -p viewer/pkg
-   cp target/x86_64-unknown-linux-gnu/release/*.wasm viewer/pkg/linux-wasm_agent.wasm
-   cp target/x86_64-pc-windows-msvc/release/*.wasm viewer/pkg/windows-x64-wasm_agent.wasm
-   cp target/x86_64-apple-darwin/release/*.wasm viewer/pkg/macos-wasm_agent.wasm
-   ```
+This project uses one browser-targeted WASM output (`wasm32-unknown-unknown`) and does
+not require OS-specific WASM binaries.
 
-3. **Update HTML for your platform:**
-   ```bash
-   ./build_and_copy_viewer.sh
-   ```
+## Local Run
 
-## Using the Viewer
+Serve files over HTTP (do not open `index.html` directly with `file://`):
 
-1. Open `viewer/index.html` in a web browser
-2. Configure your LLM provider settings
-3. Click "Execute Agent" to run tasks
+```bash
+cd viewer
+python3 -m http.server 8000
+```
 
-## CI/CD Setup
+Then open `http://localhost:8000`.
 
-For automated builds, use the GitHub Actions workflow in `.github/workflows/build-viewer.yml`
+## CI/CD
+
+The release flow packages this viewer into a single archive that runs on all major OS
+platforms in modern browsers.

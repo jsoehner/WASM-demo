@@ -38,6 +38,23 @@ cp viewer/pkg/wasm_agent.d.ts        "${PACKAGE_NAME}/pkg/"
 cp viewer/pkg/wasm_agent_bg.wasm.d.ts "${PACKAGE_NAME}/pkg/"
 cp viewer/pkg/package.json           "${PACKAGE_NAME}/pkg/"
 
+# Verify package manifest before archiving.
+REQUIRED_FILES=(
+    "${PACKAGE_NAME}/index.html"
+    "${PACKAGE_NAME}/pkg/wasm_agent.js"
+    "${PACKAGE_NAME}/pkg/wasm_agent_bg.wasm"
+    "${PACKAGE_NAME}/pkg/wasm_agent.d.ts"
+    "${PACKAGE_NAME}/pkg/wasm_agent_bg.wasm.d.ts"
+    "${PACKAGE_NAME}/pkg/package.json"
+)
+
+for f in "${REQUIRED_FILES[@]}"; do
+        if [ ! -f "$f" ]; then
+                echo "Missing required package file: $f"
+                exit 1
+        fi
+done
+
 # ── start-server.sh (Linux / macOS) ──────────────────────────────────────
 cat > "${PACKAGE_NAME}/start-server.sh" << 'EOF'
 #!/usr/bin/env bash

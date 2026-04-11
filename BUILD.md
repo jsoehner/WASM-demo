@@ -2,101 +2,92 @@
 
 ## Overview
 
-This project demonstrates WASM compilation and deployment separation. The build process generates platform-specific WASM binaries that are then deployed to the viewer directory.
+This project builds a browser-targeted WebAssembly module once and packages it as a
+single cross-platform browser distribution. The same release archive runs on
+Windows, macOS, and Linux in modern browsers.
 
-## Directory Structure
+## Canonical Build Target
 
-```
-wasm-agent/
-├── src/
-│   └── lib.rs              # WASM source code
-├── Cargo.toml
+- Rust target: `wasm32-unknown-unknown`
+- Build tool: `wasm-pack`
+- Output location: `viewer/pkg/`
 
-.build/
-└── artifacts/              # Temporary build directory
+The generated artifacts are browser portable:
 
-viewer/
-├── index.html              # Viewer HTML
-├── package.json
-└── pkg/
-    ├── linux-wasm_agent.wasm
-    ├── macos-wasm_agent.wasm
-    ├── windows-x64-wasm_agent.wasm
-    └── *.js                # Platform-specific JS glue code
+- `viewer/pkg/wasm_agent.js`
+- `viewer/pkg/wasm_agent_bg.wasm`
+- `viewer/pkg/wasm_agent.d.ts`
+- `viewer/pkg/wasm_agent_bg.wasm.d.ts`
 
-build.sh                    # Build script for Linux
-build_and_copy_viewer.sh    # Build script for Mac/Unix
-build_and_run_agent.sh
-build_and_run_agent.ps1     # Build script for Windows
+## Local Build Commands
 
-.github/workflows/
-├── build-and-deploy.yml    # Unified build + deploy workflow
-├── build-wasm.yml         # WASM-only builds
-└── build-windows-x64.yml
-```
+### Build only
 
-## Build Process
-
-## Prerequisites
-- Rust toolchain: https://rustup.rs/
-- wasm-pack: `cargo install wasm-pack`
-- WASM target: `rustup target add wasm32-unknown-unknown`
-
-### Manual Build
+Linux/macOS:
 
 ```bash
-chmod +x build.sh
 ./build.sh
 ```
 
-This will:
-1. Use `wasm-pack build --target web` to generate WASM and JS bindings
-2. Output files to `viewer/pkg/`
-3. Generate `wasm_agent.js` and `wasm_agent_bg.wasm`
+Windows:
 
-### Alternative Build
+```powershell
+.\build.ps1
+```
+
+### Build and package
+
+Linux/macOS:
 
 ```bash
-cd wasm-agent
-wasm-pack build --target web --out-dir ../viewer/pkg --out-name wasm_agent
-```
+./package.sh
 ```
 
-### Workflow Automation
+Windows:
 
-The GitHub Actions workflow in `.github/workflows/build-and-deploy.yml` handles:
-- WASM compilation for Linux/Mac
-- Windows x64 compilation
-- Artifact upload and deployment to viewer
-- Verification
+```powershell
+.\package.ps1
+```
 
-## Deployment
-
-The `viewer/pkg/` directory contains:
-- `wasm_agent.js` - Generated JavaScript bindings
-- `wasm_agent_bg.wasm` - WebAssembly binary
-
-The viewer automatically loads these files for all platforms.
-
-## Testing
+Convenience wrapper:
 
 ```bash
-# Build and serve the viewer
-npm install --prefix viewer
-npm install --save-dev serve
-npm link serve
-npx serve viewer
+./build-and-package.sh
 ```
+
+## Distribution Package Contract
+
+A release package must contain:
+
+- `index.html`
+- `pkg/wasm_agent.js`
+- `pkg/wasm_agent_bg.wasm`
+- `pkg/wasm_agent.d.ts`
+- `pkg/wasm_agent_bg.wasm.d.ts`
+- `pkg/package.json`
+- `start-server.sh`
+- `start-server.bat`
+- `start-server.ps1`
+
+## Runtime
+
+Extract the archive and run one startup script:
+
+- Linux/macOS: `./start-server.sh`
+- Windows cmd: `start-server.bat`
+- Windows PowerShell: `./start-server.ps1`
+
+Then open `http://localhost:8000`.
+
+## CI/CD Intent
+
+The release pipeline should publish one universal browser package artifact.
+Optional multi-OS checks can validate extraction and startup behavior of that same
+archive, but do not need per-OS WASM compilation outputs.
 
 ## Architecture Notes
 
-- WASM binary is universal for web browsers
-- No platform-specific compilation needed
-- Uses wasm-bindgen for seamless JS/WASM interop
-
-## Platform Detection
-
-The WASM code detects the platform via:
-- `navigator.userAgent` for Windows/macOS
-- `process.platform` for Node.js environments
-- Browser headers for web environments
+- Browser portability comes from the WASM target, not host OS-specific binaries.
+- Build wrappers can differ by shell (bash/PowerShell) while producing the same
+  package manifest.
+- Platform-specific native binary naming is intentionally out of scope for this demo.

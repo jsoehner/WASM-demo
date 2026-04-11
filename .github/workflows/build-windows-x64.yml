@@ -1,10 +1,6 @@
-name: Build Windows WASM Package
+name: Build Windows WASM Package (Legacy Manual)
 
 on:
-  push:
-    branches:
-      - main
-  pull_request:
   workflow_dispatch:
 
 permissions:

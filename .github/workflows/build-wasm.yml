@@ -1,10 +1,6 @@
-name: Build WASM
+name: Build WASM (Legacy Manual)
 
 on:
-  push:
-    branches:
-      - main
-  pull_request:
   workflow_dispatch:
 
 permissions:

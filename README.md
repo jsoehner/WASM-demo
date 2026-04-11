@@ -31,8 +31,9 @@ A WebAssembly-based LLM agent that runs in the browser and can interact with var
 
 3. **Open the viewer:**
    ```bash
-   # Serve the packaged distribution
-   cd dist && ./start-server.sh
+   # Extract and run the packaged distribution
+   unzip wasm-agent-viewer-*.zip
+   cd wasm-agent-viewer-* && ./start-server.sh
    # Then open http://localhost:8000 in your browser
    ```
 
@@ -50,41 +51,32 @@ The project includes a complete packaging system for creating downloadable distr
 ./package-viewer.sh
 ```
 
+Note: `package-viewer.sh` is a compatibility wrapper and delegates to `./package.sh`.
+
 This creates:
-- **`dist/`** - Complete distribution directory
-- **`wasm-agent-viewer-YYYYMMDD.zip`** - ZIP archive for download
-- **`wasm-agent-viewer-YYYYMMDD.tar.gz`** - TAR.GZ archive for download
+- **`wasm-agent-viewer-YYYYMMDD.zip`** - Cross-platform browser package
+- **`wasm-agent-viewer-YYYYMMDD.tar.gz`** - Cross-platform browser package (if `zip` is unavailable, `tar.gz` is produced)
 
 ### Distribution Contents
 
 The distribution package includes:
-- **Web viewer** - Complete HTML/CSS/JavaScript interface
-- **WASM binaries** - Optimized WebAssembly modules
-- **Server scripts** - Easy startup scripts for Linux/macOS/Windows
-- **Desktop app** - Electron wrapper for native desktop experience
-- **Installation scripts** - Automated installers for different platforms
-- **Documentation** - Complete usage guides and troubleshooting
+- **Web viewer** - `index.html`
+- **WASM package** - `pkg/wasm_agent.js`, `pkg/wasm_agent_bg.wasm`, and `.d.ts` files
+- **Server scripts** - `start-server.sh`, `start-server.bat`, `start-server.ps1`
 
 ### Running the Distribution
 
 **Web Server Mode (Recommended):**
 ```bash
-cd dist
+unzip wasm-agent-viewer-*.zip
+cd wasm-agent-viewer-*
 ./start-server.sh  # Linux/macOS
 # or
 start-server.bat   # Windows
 ```
 
-**Desktop App Mode:**
-```bash
-cd dist/electron-app
-npm install
-npm start
-```
-
 **Manual Serving:**
 ```bash
-cd dist
 python3 -m http.server 8000
 # Then open http://localhost:8000
 ```
@@ -95,6 +87,17 @@ python3 -m http.server 8000
 - `viewer/` - Web interface that loads and runs the WASM agent
 - `build.sh` - Build script using wasm-pack
 
+## Script Status
+
+- Canonical build scripts: `build.sh`, `build.ps1`
+- Canonical package scripts: `package.sh`, `package.ps1`
+- Convenience wrapper: `build-and-package.sh`
+- Compatibility wrapper: `package-viewer.sh` (delegates to `package.sh`)
+- Deprecated legacy bootstrap scripts:
+   - `build_and_copy_viewer.sh`
+   - `build_and_run_agent.sh`
+   - `build_and_run_agent.ps1`
+
 ## Supported Providers
 
 - **OpenAI API**: Compatible with OpenAI, Open WebUI, and similar services
@@ -102,15 +105,10 @@ python3 -m http.server 8000
 
 ## Distribution Options
 
-### Web Distribution
+### Universal Browser Distribution
 - **Universal compatibility** - Works in any modern web browser
-- **Zero installation** - Just download and serve
+- **Zero install runtime** - Just extract and serve over HTTP
 - **Cross-platform** - Same package works on Windows, macOS, Linux
-
-### Desktop App Distribution
-- **Electron wrapper** - Native desktop application experience
-- **Offline capable** - Can work without constant web server
-- **System integration** - Desktop shortcuts, start menu entries
 
 ### Archive Downloads
 - **ZIP format** - `wasm-agent-viewer-YYYYMMDD.zip`
@@ -150,6 +148,13 @@ The project includes GitHub Actions workflows for automated building and packagi
 - ✅ Optional artifact upload
 - ✅ Quick testing without releases
 
+### Cross-OS Validation Workflow (`build-viewer.yml`)
+
+**Purpose:**
+- Builds one canonical archive package
+- Validates extraction and package structure on Linux/macOS/Windows
+- Confirms one package is consumable across OS environments
+
 ### Using the Workflows
 
 **Manual Build:**
@@ -163,9 +168,23 @@ The project includes GitHub Actions workflows for automated building and packagi
 1. Use the release script: `./release.sh patch` (or `minor`/`major`)
 2. Or manually: `git tag v1.0.0 && git push origin v1.0.0`
 3. The workflow will automatically build, test, and create a GitHub release
-4. Users can download the ZIP/TAR.GZ packages from the release
+4. Users can download the browser package archive from the release
 
 **Nightly Builds:**
 1. Go to Actions → "Build and Release Viewer Packages"
-2. Click "Run workflow" → Select "nightly" as release type
-3. Creates/updates a "nightly" release with latest code
+2. Click "Run workflow" and select `nightly` release type
+3. Creates or updates a `nightly` release with latest code
+
+## Build Environment Notes
+
+- `wasm-pack` requires `cargo` to be available in `PATH`.
+- If Rust is installed but `cargo` is missing, add:
+
+```bash
+export PATH="$HOME/.cargo/bin:$PATH"
+```
+
+## Git Ignore
+
+- Root `.gitignore` now ignores generated release archives:
+   - `wasm-agent-viewer-*.zip`

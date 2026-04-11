@@ -1,19 +1,12 @@
 #!/bin/bash
 set -e
 
-echo "🔨 Quick Build & Package Script"
-echo "==============================="
+echo "Quick Build and Package Script"
+echo "=============================="
 
-# Build the WASM module
-echo "📦 Building WASM module..."
-cd wasm-agent
-wasm-pack build --target web --out-dir ../viewer/pkg --out-name wasm_agent
-cd ..
-
-# Run the packaging script
-echo "📦 Creating distribution package..."
-./package-viewer.sh
+echo "Creating universal browser release package..."
+./package.sh
 
 echo ""
-echo "✅ Build and packaging complete!"
-echo "📁 Check the 'dist/' directory and archive files for the distribution."
+echo "Build and packaging complete."
+echo "Archives were created in the repository root (wasm-agent-viewer-*.zip/.tar.gz)."

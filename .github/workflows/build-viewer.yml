@@ -1,4 +1,4 @@
-name: Build WASM Viewer
+name: Validate Universal Viewer Package
 
 on:
   push:
@@ -10,14 +10,13 @@ on:
 permissions:
   contents: read
 
+env:
+  CARGO_TERM_COLOR: always
+
 jobs:
-  build-wasm-matrix:
-    name: Build WASM (${{ matrix.os }})
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+  build-package:
+    name: Build Canonical Package
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
@@ -34,37 +33,71 @@ jobs:
       - name: Install wasm-pack
         run: cargo install --locked wasm-pack
 
-      - name: Build WASM package
-        shell: bash
-        run: bash build.sh
+      - name: Build package
+        run: |
+          chmod +x build.sh package.sh
+          ./package.sh
 
-      - name: Upload OS-specific artifact
+      - name: Upload canonical distribution
         uses: actions/upload-artifact@v4
         with:
-          name: wasm-pkg-${{ matrix.os }}
-          path: viewer/pkg/
+          name: universal-viewer-package
+          path: |
+            wasm-agent-viewer-*.zip
+            wasm-agent-viewer-*.tar.gz
+          if-no-files-found: error
 
-  aggregate-viewer-artifacts:
-    name: Aggregate Viewer Artifacts
-    needs: build-wasm-matrix
-    runs-on: ubuntu-latest
+  smoke-test:
+    name: Smoke Test Extracted Package (${{ matrix.os }})
+    needs: build-package
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
 
     steps:
-      - name: Download all artifacts
+      - name: Download canonical distribution
         uses: actions/download-artifact@v4
         with:
-          path: artifacts/
-          pattern: wasm-pkg-*
+          name: universal-viewer-package
+          path: dist-artifact
 
-      - name: Verify artifact structure
+      - name: Extract package (unix)
+        if: runner.os != 'Windows'
+        shell: bash
         run: |
           set -euo pipefail
-          find artifacts -maxdepth 3 -type f | sort
-          test -n "$(find artifacts -type f -name wasm_agent.js | head -n1)"
-          test -n "$(find artifacts -type f -name wasm_agent_bg.wasm | head -n1)"
+          mkdir -p extracted
+          ARCHIVE="$(ls dist-artifact/wasm-agent-viewer-*.zip 2>/dev/null | head -n1 || true)"
+          if [ -n "$ARCHIVE" ]; then
+            unzip -q "$ARCHIVE" -d extracted
+          else
+            ARCHIVE="$(ls dist-artifact/wasm-agent-viewer-*.tar.gz 2>/dev/null | head -n1 || true)"
+            test -n "$ARCHIVE"
+            tar -xzf "$ARCHIVE" -C extracted
+          fi
+          PKG_DIR="$(find extracted -maxdepth 1 -type d -name 'wasm-agent-viewer-*' | head -n1)"
+          test -n "$PKG_DIR"
+          test -f "$PKG_DIR/index.html"
+          test -f "$PKG_DIR/pkg/wasm_agent.js"
+          test -f "$PKG_DIR/pkg/wasm_agent_bg.wasm"
 
-      - name: Upload combined artifact bundle
-        uses: actions/upload-artifact@v4
-        with:
-          name: viewer-package
-          path: artifacts/
+      - name: Extract package (windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Path extracted | Out-Null
+          $zip = Get-ChildItem dist-artifact\wasm-agent-viewer-*.zip -ErrorAction SilentlyContinue | Select-Object -First 1
+          if ($zip) {
+            Expand-Archive -Path $zip.FullName -DestinationPath extracted -Force
+          } else {
+            $tgz = Get-ChildItem dist-artifact\wasm-agent-viewer-*.tar.gz -ErrorAction SilentlyContinue | Select-Object -First 1
+            if (-not $tgz) { throw "No archive found" }
+            tar -xzf $tgz.FullName -C extracted
+          }
+          $pkgDir = Get-ChildItem extracted -Directory | Where-Object { $_.Name -like 'wasm-agent-viewer-*' } | Select-Object -First 1
+          if (-not $pkgDir) { throw "Package directory not found" }
+          if (-not (Test-Path "$($pkgDir.FullName)\index.html")) { throw "index.html missing" }
+          if (-not (Test-Path "$($pkgDir.FullName)\pkg\wasm_agent.js")) { throw "wasm_agent.js missing" }
+          if (-not (Test-Path "$($pkgDir.FullName)\pkg\wasm_agent_bg.wasm")) { throw "wasm_agent_bg.wasm missing" }

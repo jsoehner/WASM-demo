@@ -11,6 +11,11 @@ if (-not (Get-Command wasm-pack -ErrorAction SilentlyContinue)) {
     exit 1
 }
 
+if (-not (Get-Command cargo -ErrorAction SilentlyContinue)) {
+    Write-Error "cargo not found in PATH.`nIf Rust is installed, add $HOME\\.cargo\\bin to PATH and retry."
+    exit 1
+}
+
 Push-Location "$PSScriptRoot\wasm-agent"
 try {
     Write-Host "Building WASM module..."
