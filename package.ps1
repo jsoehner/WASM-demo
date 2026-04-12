@@ -60,19 +60,55 @@ try {
 #!/usr/bin/env bash
 # Serve the WASM viewer over HTTP.
 # WASM ES-module imports require HTTP — opening index.html directly won't work.
+#
+# Usage:
+#   ./start-server.sh              # localhost only, port 8000
+#   ./start-server.sh 8080         # custom port, localhost only
+#   ./start-server.sh 8000 0.0.0.0 # LAN access (all interfaces) for Android/iOS testing
 PORT="${1:-8000}"
-echo "Starting server at http://localhost:${PORT}"
-echo "Open that URL in any modern browser (Chrome, Firefox, Safari, Edge)."
-echo "Press Ctrl+C to stop."
+BIND="${2:-127.0.0.1}"
 cd "$(dirname "$0")"
+
+LAN_IP=""
+if [ "$BIND" = "0.0.0.0" ]; then
+    LAN_IP="$(python3 -c "import socket; s=socket.socket(); s.connect(('8.8.8.8',80)); print(s.getsockname()[0]); s.close()" 2>/dev/null || \
+              hostname -I 2>/dev/null | awk '{print $1}' || echo "")"
+fi
+
+echo "Starting server at http://${BIND}:${PORT}"
+if [ -n "$LAN_IP" ]; then
+    echo "LAN access (Android/iOS): http://${LAN_IP}:${PORT}"
+fi
+echo "Open the URL in any modern browser (Chrome, Firefox, Safari, Edge)."
+echo "Press Ctrl+C to stop."
+
+SERVE_SCRIPT='
+import sys, os
+sys.path.insert(0, os.getcwd())
+from http.server import HTTPServer, SimpleHTTPRequestHandler
+
+class WasmHandler(SimpleHTTPRequestHandler):
+    extensions_map = {
+        **SimpleHTTPRequestHandler.extensions_map,
+        ".wasm": "application/wasm",
+    }
+    def log_message(self, fmt, *args):
+        pass
+
+port = int(sys.argv[1]) if len(sys.argv) > 1 else 8000
+bind = sys.argv[2] if len(sys.argv) > 2 else "127.0.0.1"
+httpd = HTTPServer((bind, port), WasmHandler)
+httpd.serve_forever()
+'
+
 if command -v python3 &>/dev/null; then
-    python3 -m http.server "${PORT}"
+    python3 -c "$SERVE_SCRIPT" "${PORT}" "${BIND}"
 elif command -v python &>/dev/null; then
-    python -m http.server "${PORT}"
+    python -c "$SERVE_SCRIPT" "${PORT}" "${BIND}"
 else
     echo "Python not found. Serve this directory with any HTTP server, e.g.:"
     echo "  npx serve ."
-    echo "  php -S localhost:${PORT}"
+    echo "  php -S ${BIND}:${PORT}"
     exit 1
 fi
 '@ | Set-Content -Path "$packageName\start-server.sh" -Encoding UTF8
@@ -81,12 +117,15 @@ fi
     @'
 @echo off
 set PORT=8000
+set BIND=127.0.0.1
 if not "%~1"=="" set PORT=%~1
-echo Starting server at http://localhost:%PORT%
+if not "%~2"=="" set BIND=%~2
+echo Starting server at http://%BIND%:%PORT%
+if "%BIND%"=="0.0.0.0" echo For Android/iOS testing, use your machine's LAN IP on port %PORT%
 echo Open that URL in any modern browser (Chrome, Firefox, Safari, Edge).
 echo Press Ctrl+C to stop.
 cd /d "%~dp0"
-python -m http.server %PORT%
+python -c "from http.server import HTTPServer,SimpleHTTPRequestHandler; m={**SimpleHTTPRequestHandler.extensions_map,'.wasm':'application/wasm'}; SimpleHTTPRequestHandler.extensions_map=m; HTTPServer(('%BIND%',%PORT%),SimpleHTTPRequestHandler).serve_forever()"
 if errorlevel 1 (
     echo Python not found. Serve this directory with any HTTP server, e.g.:
     echo   npx serve .
@@ -96,15 +135,30 @@ if errorlevel 1 (
 
     # ── start-server.ps1 (Windows PowerShell) ──────────────────────────────
     @'
-param([int]$Port = 8000)
+param(
+    [int]$Port = 8000,
+    [string]$Bind = "127.0.0.1"
+)
 Set-Location $PSScriptRoot
-Write-Host "Starting server at http://localhost:$Port"
+Write-Host "Starting server at http://${Bind}:${Port}"
+if ($Bind -eq "0.0.0.0") {
+    $lanIP = (Get-NetIPAddress -AddressFamily IPv4 | Where-Object { $_.PrefixOrigin -eq "Dhcp" -or $_.PrefixOrigin -eq "Manual" } | Select-Object -First 1).IPAddress
+    if ($lanIP) { Write-Host "LAN access (Android/iOS): http://${lanIP}:${Port}" }
+}
 Write-Host "Open that URL in any modern browser (Chrome, Firefox, Safari, Edge)."
 Write-Host "Press Ctrl+C to stop."
+$serveScript = @'
+from http.server import HTTPServer, SimpleHTTPRequestHandler
+import sys
+class WasmHandler(SimpleHTTPRequestHandler):
+    extensions_map = {**SimpleHTTPRequestHandler.extensions_map, ".wasm": "application/wasm"}
+    def log_message(self, fmt, *args): pass
+HTTPServer((sys.argv[1], int(sys.argv[2])), WasmHandler).serve_forever()
+'@
 if (Get-Command python3 -ErrorAction SilentlyContinue) {
-    python3 -m http.server $Port
+    python3 -c $serveScript $Bind $Port
 } elseif (Get-Command python -ErrorAction SilentlyContinue) {
-    python -m http.server $Port
+    python -c $serveScript $Bind $Port
 } else {
     Write-Host "Python not found. Serve this directory with any HTTP server, e.g.:"
     Write-Host "  npx serve ."
