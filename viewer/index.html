@@ -3,15 +3,19 @@
 <head>
     <title>WASM Viewer</title>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <style>
         body { 
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
             max-width: 900px; 
             margin: 2rem auto; 
-            padding: 1rem; 
+            padding: 1rem;
+            padding-left: max(1rem, env(safe-area-inset-left));
+            padding-right: max(1rem, env(safe-area-inset-right));
+            padding-bottom: max(1rem, env(safe-area-inset-bottom));
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
             min-height: 100vh;
+            min-height: 100dvh;
         }
         .card { 
             background: white; 
@@ -28,7 +32,7 @@
             box-sizing: border-box; 
             border: 2px solid #e0e0e0; 
             border-radius: 8px; 
-            font-size: 14px;
+            font-size: 16px;
             transition: all 0.3s ease;
         }
         input:focus, select:focus, textarea:focus { 
@@ -43,6 +47,7 @@
             cursor: pointer; 
             font-weight: 600;
             transition: all 0.3s ease;
+            touch-action: manipulation;
         }
         button:hover { 
             transform: translateY(-2px); 
@@ -187,6 +192,25 @@
         let AgentClass = null;
         let agentInstance = null;
         let isProcessing = false;
+
+        // ── WebAssembly feature detection ─────────────────────────────────
+        function checkWasmSupport() {
+            if (typeof WebAssembly === 'undefined' ||
+                typeof WebAssembly.instantiate !== 'function') {
+                document.getElementById('log').textContent =
+                    '❌ WebAssembly is not supported in this browser.\n' +
+                    'Please upgrade to a modern browser:\n' +
+                    '  • Chrome 57+ / Chrome for Android 57+\n' +
+                    '  • Safari 11+ / iOS Safari 11+\n' +
+                    '  • Firefox 52+\n' +
+                    '  • Edge 16+';
+                document.getElementById('run-btn').disabled = true;
+                document.getElementById('status-indicator').className = 'status-indicator status-error';
+                document.getElementById('status-text').textContent = 'WebAssembly not supported';
+                return false;
+            }
+            return true;
+        }
 
         function formatError(error) {
             if (error instanceof Error && error.message) {
@@ -359,6 +383,7 @@
         // Initialize on page load
         (async () => {
             try {
+                if (!checkWasmSupport()) return;
                 updateCredentialNotice(document.getElementById('provider').value);
                 await initWasm();
                 updateStatus('✅ Ready');

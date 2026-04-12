@@ -85,6 +85,41 @@ python3 -m http.server 8000
 # Then open http://localhost:8000
 ```
 
+### Testing on Android and iOS Devices (LAN Access)
+
+To test the viewer on a physical Android or iOS device connected to the same Wi-Fi network:
+
+1. **Start the server bound to all interfaces** so your phone can reach it:
+
+   ```bash
+   # Linux/macOS (from the extracted distribution folder)
+   ./start-server.sh 8000 0.0.0.0
+
+   # Windows PowerShell
+   .\start-server.ps1 -Port 8000 -Bind 0.0.0.0
+
+   # Windows cmd
+   start-server.bat 8000 0.0.0.0
+   ```
+
+   The script will print your machine's LAN IP, for example:
+   ```
+   LAN access (Android/iOS): http://192.168.1.42:8000
+   ```
+
+2. **Open that URL on your device's browser** (Chrome on Android, Safari on iOS).
+
+3. **Requirements on the device:**
+   - A modern browser that supports WebAssembly (Chrome 57+, Safari 11+, Firefox 52+).
+   - The viewer runs entirely in the browser — no app installation needed.
+   - No special headers (COOP/COEP) are required because the WASM module does not use threads or SharedArrayBuffer.
+
+4. **Firewall note:** Ensure port 8000 (or whichever port you chose) is not blocked by your OS firewall.
+   - macOS: System Settings → Network → Firewall → allow incoming connections for Python.
+   - Windows: Allow Python through Windows Defender Firewall when prompted.
+
+> **iOS Safari note:** iOS Safari 11+ supports WebAssembly. If you see a blank page, check that you are using `http://` and not `file://`, and that JavaScript is enabled in Safari settings.
+
 ## Architecture
 
 - `wasm-agent/` - Rust crate compiled to WebAssembly
