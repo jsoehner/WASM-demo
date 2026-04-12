@@ -120,22 +120,28 @@
             color: #2e7d32;
             font-size: 12px;
         }
-        .tools-info {
-            background: #e3f2fd;
-            padding: 15px;
+        .notice-box {
+            margin-top: 10px;
+            padding: 12px;
             border-radius: 8px;
-            margin-top: 15px;
+            border-left: 4px solid #ff9800;
+            background: #fff8e1;
+            color: #5d4037;
             font-size: 12px;
+            line-height: 1.5;
+        }
+        .notice-box strong {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 13px;
+        }
+        .notice-box a {
             color: #1565c0;
+            font-weight: 600;
+            text-decoration: none;
         }
-        .tools-info h4 {
-            margin: 0 0 8px 0;
-        }
-        .tools-info code {
-            background: #bbdefb;
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-family: monospace;
+        .notice-box a:hover {
+            text-decoration: underline;
         }
     </style>
 </head>
@@ -154,8 +160,9 @@
             </select>
             <input type="text" id="model-id" value="mistralai/mistral-7b-instruct:free" placeholder="Model ID" />
             <input type="text" id="api-url" value="https://openrouter.ai/api/v1" placeholder="API URL" />
-            <input type="password" id="api-key" placeholder="API Key (Optional)" />
-            <div class="help-text">Leave empty to use default settings. For OpenAI API, include full endpoint URL.</div>
+            <input type="password" id="api-key" placeholder="API Key" />
+            <div class="help-text">OpenRouter and OpenAI require an API key. Ollama usually does not.</div>
+            <div id="credential-notice" class="notice-box"></div>
         </div>
         
         <div class="config-section">
@@ -167,11 +174,6 @@
         
         <div id="log">Initializing WASM agent...</div>
         
-        <div class="tools-info">
-            <h4>🛠️ Available Tools</h4>
-            <p><code>calculate_length</code> - Calculate string length</p>
-            <p>Usage: <code>[TOOL: calculate_length:&lt;text&gt;]</code></p>
-        </div>
     </div>
     
     <script type="module">
@@ -185,6 +187,33 @@
         let AgentClass = null;
         let agentInstance = null;
         let isProcessing = false;
+
+        function formatError(error) {
+            if (error instanceof Error && error.message) {
+                return error.message;
+            }
+            if (typeof error === 'string') {
+                return error;
+            }
+            if (error && typeof error.message === 'string' && error.message) {
+                return error.message;
+            }
+            if (error && typeof error.toString === 'function') {
+                const text = error.toString();
+                if (text && text !== '[object Object]') {
+                    return text;
+                }
+            }
+            try {
+                const json = JSON.stringify(error);
+                if (json) {
+                    return json;
+                }
+            } catch (_) {
+                // Ignore serialization failures and return fallback below.
+            }
+            return 'Unknown error';
+        }
         
         async function initWasm() {
             if (AgentClass) return; // already initialized
@@ -230,6 +259,10 @@
                 if (!model) {
                     throw new Error('Please enter a model ID');
                 }
+
+                if ((provider === 'openrouter' || provider === 'openai') && !api_key) {
+                    throw new Error('This provider requires an API key. Add your key and try again.');
+                }
                 
                 log.textContent += '\n📤 Sending request to: ' + provider.toUpperCase() + ' API';
                 log.textContent += '\n📦 Model: ' + model;
@@ -247,9 +280,10 @@
                 
             } catch (error) {
                 console.error('Agent error:', error);
-                log.textContent += '\n❌ Error: ' + error.message;
+                const errorText = formatError(error);
+                log.textContent += '\n❌ Error: ' + errorText;
                 log.textContent += '\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━';
-                log.textContent += '\n⚠️ ' + error.message;
+                log.textContent += '\n⚠️ ' + errorText;
                 updateStatus('❌ Error');
             } finally {
                 isProcessing = false;
@@ -282,6 +316,27 @@
             ollama:     { url: 'http://localhost:11434/api',     model: 'llama3' },
         };
 
+        const PROVIDER_NOTICES = {
+            openrouter: {
+                title: 'OpenRouter Credentials',
+                details: 'Sign in using <a href="https://openrouter.ai/sign-in?redirect_url=https%3A%2F%2Fopenrouter.ai%2Fworkspaces%2Fdefault%2Fkeys" target="_blank" rel="noopener noreferrer">this OpenRouter login link</a> to land directly on the keys page and create an API key. Free-tier models still require a key.'
+            },
+            openai: {
+                title: 'OpenAI Credentials',
+                details: 'Create an account at <a href="https://platform.openai.com" target="_blank" rel="noopener noreferrer">platform.openai.com</a>, then create a key in <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener noreferrer">OpenAI API keys</a>. Ensure billing/project access is enabled for the model you select.'
+            },
+            ollama: {
+                title: 'Ollama Credentials',
+                details: 'No API key is required for a default local Ollama setup. Install from <a href="https://ollama.com/download" target="_blank" rel="noopener noreferrer">ollama.com/download</a>, run Ollama locally, then pull a model (for example: <code>ollama pull llama3</code>).' 
+            },
+        };
+
+        function updateCredentialNotice(provider) {
+            const notice = document.getElementById('credential-notice');
+            const info = PROVIDER_NOTICES[provider] || PROVIDER_NOTICES.openrouter;
+            notice.innerHTML = '<strong>🔐 ' + info.title + '</strong>' + info.details;
+        }
+
         function onProviderChange() {
             const provider = document.getElementById('provider').value;
             const defaults = PROVIDER_DEFAULTS[provider];
@@ -289,6 +344,7 @@
                 document.getElementById('api-url').value = defaults.url;
                 document.getElementById('model-id').value = defaults.model;
             }
+            updateCredentialNotice(provider);
             // Reset agent so it is re-created with the new provider settings
             agentInstance = null;
         }
@@ -303,12 +359,13 @@
         // Initialize on page load
         (async () => {
             try {
+                updateCredentialNotice(document.getElementById('provider').value);
                 await initWasm();
                 updateStatus('✅ Ready');
             } catch (error) {
                 console.error('Init error:', error);
                 updateStatus('❌ Init Failed');
-                document.getElementById('log').textContent += '\n⚠️ Initialization error: ' + error.message;
+                document.getElementById('log').textContent += '\n⚠️ Initialization error: ' + formatError(error);
             }
         })();
     </script>

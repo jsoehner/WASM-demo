@@ -50,7 +50,6 @@ impl Agent {
     }
 
     /// Run a task against the configured LLM provider.
-    /// Supports one level of tool-calling for `calculate_length`.
     pub async fn run_task(&self, model: String, prompt: String) -> Result<String, JsValue> {
         if !self.api_url.starts_with("http://") && !self.api_url.starts_with("https://") {
             return Err(JsValue::from_str(
@@ -64,45 +63,15 @@ impl Agent {
 
         let system = LlmMessage {
             role: "system".to_string(),
-            content: "You are a WASM agent. \
-                Available tool: [TOOL: calculate_length: <text>] returns the character count. \
-                Use it when asked about string length."
+            content: "You are a WASM agent. Answer the user directly and clearly."
                 .to_string(),
         };
-        let mut messages = vec![
+        let messages = vec![
             system,
             LlmMessage { role: "user".to_string(), content: prompt },
         ];
 
-        // Tool-calling loop — max 5 iterations to prevent runaway loops
-        for _ in 0..5 {
-            let response = self.call_llm(&model, &messages).await?;
-
-            const TOOL_PREFIX: &str = "[TOOL: calculate_length:";
-            if !response.contains(TOOL_PREFIX) {
-                return Ok(response);
-            }
-
-            if let Some(start) = response.find(TOOL_PREFIX) {
-                let after = &response[start + TOOL_PREFIX.len()..];
-                let end = after.find(']').unwrap_or(after.len());
-                let target = after[..end].trim();
-                let tool_result =
-                    format!("Length of '{}' is {} characters.", target, target.len());
-                messages.push(LlmMessage {
-                    role: "assistant".to_string(),
-                    content: response,
-                });
-                messages.push(LlmMessage {
-                    role: "user".to_string(),
-                    content: tool_result,
-                });
-            } else {
-                return Ok(response);
-            }
-        }
-
-        Err(JsValue::from_str("Tool-calling loop exceeded maximum iterations"))
+        self.call_llm(&model, &messages).await
     }
 
     async fn call_llm(&self, model: &str, messages: &[LlmMessage]) -> Result<String, JsValue> {
