@@ -1,2 +1,5 @@
 # Generated release archives
 wasm-agent-viewer-*.zip
+
+# Playwright MCP artifacts
+.playwright-mcp/

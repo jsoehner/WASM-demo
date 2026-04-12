@@ -9,6 +9,10 @@ A WebAssembly-based LLM agent that runs in the browser and can interact with var
 - 🛠️ Built-in tool calling (string length calculation)
 - 🌐 Universal WASM binary for all platforms
 
+## Screenshot
+
+![Multi-Provider WASM Agent UI](docs/images/screenshot.png)
+
 ## Quick Start
 
 1. **Install prerequisites:**
