@@ -25,6 +25,7 @@ permissions:
 
 env:
   CARGO_TERM_COLOR: always
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
   build-and-package:
@@ -149,22 +150,120 @@ jobs:
           NEW_PATCH=$((PATCH + 1))
           NEW_VERSION="${MAJOR}.${MINOR}.${NEW_PATCH}"
           NEW_TAG="v${NEW_VERSION}"
+          echo "previous_tag=$LATEST" >> "$GITHUB_OUTPUT"
           echo "tag=$NEW_TAG" >> "$GITHUB_OUTPUT"
           echo "version=$NEW_VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Build release notes from commit history
+        id: release_notes
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          PREV_TAG="${{ steps.next_version.outputs.previous_tag }}"
+          if git rev-parse "$PREV_TAG" >/dev/null 2>&1; then
+            RANGE="${PREV_TAG}..HEAD"
+            CHANGE_SCOPE="Changes since ${PREV_TAG}."
+          else
+            FIRST_COMMIT="$(git rev-list --max-parents=0 HEAD | tail -n1)"
+            RANGE="${FIRST_COMMIT}..HEAD"
+            CHANGE_SCOPE="Changes since initial commit."
+          fi
+
+          mapfile -t COMMITS < <(git log --no-merges --pretty=format:'%s' "$RANGE")
+
+          FEATURES=()
+          FIXES=()
+          OTHER=()
+
+          for SUBJECT in "${COMMITS[@]}"; do
+            LOWER_SUBJECT="$(echo "$SUBJECT" | tr '[:upper:]' '[:lower:]')"
+            if [[ "$LOWER_SUBJECT" =~ ^feat(\(.+\))?: ]]; then
+              FEATURES+=("$SUBJECT")
+            elif [[ "$LOWER_SUBJECT" =~ ^fix(\(.+\))?: ]] || [[ "$LOWER_SUBJECT" =~ ^bugfix(\(.+\))?: ]]; then
+              FIXES+=("$SUBJECT")
+            else
+              OTHER+=("$SUBJECT")
+            fi
+          done
+
+          {
+            echo "body<<EOF"
+            echo "## WASM Agent Viewer ${{ steps.next_version.outputs.version }}"
+            echo
+            echo "$CHANGE_SCOPE"
+            echo
+            echo "### Features"
+            if [ ${#FEATURES[@]} -eq 0 ]; then
+              echo "- No feature commits were identified in this range."
+            else
+              for ITEM in "${FEATURES[@]}"; do
+                echo "- $ITEM"
+              done
+            fi
+            echo
+            echo "### Bug Fixes"
+            if [ ${#FIXES[@]} -eq 0 ]; then
+              echo "- No bug-fix commits were identified in this range."
+            else
+              for ITEM in "${FIXES[@]}"; do
+                echo "- $ITEM"
+              done
+            fi
+            echo
+            echo "### Other Changes"
+            if [ ${#OTHER[@]} -eq 0 ]; then
+              echo "- No additional commits in this range."
+            else
+              for ITEM in "${OTHER[@]}"; do
+                echo "- $ITEM"
+              done
+            fi
+            echo
+            echo "Download and extract the package, run the included start script, then open http://localhost:8000 in your browser."
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Rename release archives to semantic version
+        id: normalize_assets
+        run: |
+          set -euo pipefail
+          VERSION="${{ steps.next_version.outputs.version }}"
+
+          shopt -s nullglob
+          ZIP_FILES=(release-artifacts/wasm-agent-viewer-*.zip)
+          TGZ_FILES=(release-artifacts/wasm-agent-viewer-*.tar.gz)
+          shopt -u nullglob
+
+          if [ ${#ZIP_FILES[@]} -eq 0 ] && [ ${#TGZ_FILES[@]} -eq 0 ]; then
+            echo "No release archives found to rename" >&2
+            exit 1
+          fi
+
+          if [ ${#ZIP_FILES[@]} -gt 0 ]; then
+            mv "${ZIP_FILES[0]}" "release-artifacts/wasm-agent-viewer-${VERSION}.zip"
+          fi
+
+          if [ ${#TGZ_FILES[@]} -gt 0 ]; then
+            mv "${TGZ_FILES[0]}" "release-artifacts/wasm-agent-viewer-${VERSION}.tar.gz"
+          fi
+
+          {
+            echo "files<<EOF"
+            [ -f "release-artifacts/wasm-agent-viewer-${VERSION}.zip" ] && echo "release-artifacts/wasm-agent-viewer-${VERSION}.zip"
+            [ -f "release-artifacts/wasm-agent-viewer-${VERSION}.tar.gz" ] && echo "release-artifacts/wasm-agent-viewer-${VERSION}.tar.gz"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
+          ls -la release-artifacts/
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.next_version.outputs.tag }}
           name: WASM Agent Viewer ${{ steps.next_version.outputs.version }}
-          body: |
-            WASM Agent Viewer ${{ steps.next_version.outputs.version }}
-
-            Download and extract the package, run the included start script,
-            then open http://localhost:8000 in your browser.
-          files: |
-            release-artifacts/wasm-agent-viewer-*.zip
-            release-artifacts/wasm-agent-viewer-*.tar.gz
+          body: ${{ steps.release_notes.outputs.body }}
+          files: ${{ steps.normalize_assets.outputs.files }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
