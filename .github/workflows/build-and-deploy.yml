@@ -25,7 +25,9 @@ jobs:
         uses: Swatinem/rust-cache@v2
 
       - name: Install wasm-pack
-        run: cargo install --locked wasm-pack
+        uses: jetli/wasm-pack-action@v0.4.0
+        with:
+          version: 'latest'
 
       - name: Build WASM package
         run: bash build.sh
@@ -35,10 +37,10 @@ jobs:
         with:
           name: wasm-pkg
           path: |
-            viewer/pkg/wasm_agent.js
-            viewer/pkg/wasm_agent_bg.wasm
-            viewer/pkg/wasm_agent.d.ts
-            viewer/pkg/wasm_agent_bg.wasm.d.ts
+            pkg/wasm_agent.js
+            pkg/wasm_agent_bg.wasm
+            pkg/wasm_agent.d.ts
+            pkg/wasm_agent_bg.wasm.d.ts
 
   deploy:
     needs: build-wasm
@@ -57,7 +59,7 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p deployment/pkg
-          cp viewer/index.html deployment/
+          cp index.html deployment/
 
           for f in wasm_agent.js wasm_agent_bg.wasm wasm_agent.d.ts wasm_agent_bg.wasm.d.ts; do
             src="$(find downloaded -type f -name "$f" | head -n1 || true)"
