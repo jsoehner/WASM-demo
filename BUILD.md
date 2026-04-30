@@ -10,49 +10,27 @@ Windows, macOS, and Linux in modern browsers.
 
 - Rust target: `wasm32-unknown-unknown`
 - Build tool: `wasm-pack`
-- Output location: `viewer/pkg/`
+- Output location: `pkg/`
 
 The generated artifacts are browser portable:
 
-- `viewer/pkg/wasm_agent.js`
-- `viewer/pkg/wasm_agent_bg.wasm`
-- `viewer/pkg/wasm_agent.d.ts`
-- `viewer/pkg/wasm_agent_bg.wasm.d.ts`
+- `pkg/wasm_agent.js`
+- `pkg/wasm_agent_bg.wasm`
+- `pkg/wasm_agent.d.ts`
+- `pkg/wasm_agent_bg.wasm.d.ts`
 
 ## Local Build Commands
 
 ### Build only
 
-Linux/macOS:
-
 ```bash
 ./build.sh
 ```
 
-Windows:
-
-```powershell
-.\build.ps1
-```
-
 ### Build and package
 
-Linux/macOS:
-
 ```bash
-./package.sh
-```
-
-Windows:
-
-```powershell
-.\package.ps1
-```
-
-Convenience wrapper:
-
-```bash
-./build-and-package.sh
+./build.sh --package
 ```
 
 ## Distribution Package Contract

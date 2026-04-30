@@ -5,8 +5,11 @@ A WebAssembly-based LLM agent that runs in the browser and can interact with var
 ## Features
 
 - 🤖 Runs entirely in the browser using WebAssembly
-- 🔄 Supports multiple LLM providers (OpenAI API, Ollama)
-- 🛠️ Built-in tool calling (string length calculation)
+- 🔄 Supports multiple LLM providers (OpenAI API, Ollama, OpenRouter)
+- ⚡ **Real-time Streaming** - Watch the agent think and respond in real-time
+- 🛠️ **Advanced Tool Calling** - Built-in environment discovery tools
+- ⏹ **Execution Control** - Abort generation at any time
+- 📋 **Developer Experience** - One-click code block copying
 - 🌐 Universal WASM binary for all platforms
 
 ## Screenshot

@@ -81,6 +81,7 @@
             margin: 0;
             background: linear-gradient(to right, var(--primary), #ec4899);
             -webkit-background-clip: text;
+            background-clip: text;
             -webkit-text-fill-color: transparent;
         }
 
@@ -173,6 +174,26 @@
             transform: translateY(0);
         }
 
+        .btn-secondary {
+            background: var(--bg);
+            color: var(--text);
+            border: 2px solid var(--border);
+            padding: 1rem;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            white-space: nowrap;
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--error);
+            color: var(--error);
+        }
+
         #log-container {
             margin-top: 2rem;
             border-radius: 16px;
@@ -255,6 +276,24 @@
             display: flex;
             justify-content: space-between;
         }
+
+        .copy-btn {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            color: white;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            cursor: pointer;
+            backdrop-filter: blur(4px);
+        }
+
+        .copy-btn:hover {
+            background: var(--primary);
+        }
     </style>
 </head>
 <body>
@@ -318,9 +357,14 @@
             <textarea id="prompt" rows="3" placeholder="Type your message here..." oninput="saveConfig()"></textarea>
         </div>
 
-        <button id="run-btn" class="btn-primary" onclick="runAgent()">
-            <span id="btn-text">Execute Agent</span>
-        </button>
+        <div style="display: flex; gap: 1rem; margin-bottom: 1.5rem;">
+            <button id="run-btn" class="btn-primary" onclick="runAgent()">
+                <span id="btn-text">Execute Agent</span>
+            </button>
+            <button id="stop-btn" class="btn-secondary" style="display: none;" onclick="stopAgent()">
+                ⏹ Stop
+            </button>
+        </div>
 
         <div id="log-container">
             <div id="log-header">
@@ -342,6 +386,7 @@
 
     <script>
         let wasmAgent = null;
+        let abortController = null;
 
         // Marked.js Configuration
         marked.setOptions({
@@ -397,13 +442,18 @@
         async function runAgent() {
             const log = document.getElementById('log');
             const runBtn = document.getElementById('run-btn');
+            const stopBtn = document.getElementById('stop-btn');
             const statusPill = document.getElementById('status-pill');
             
             runBtn.disabled = true;
-            runBtn.innerHTML = '<div class="spinner"></div> Processing...';
-            statusPill.textContent = 'Processing';
+            stopBtn.style.display = 'flex';
+            runBtn.innerHTML = '<div class="spinner"></div> Streaming...';
+            statusPill.textContent = 'Streaming';
             statusPill.style.background = 'var(--primary)';
             statusPill.style.color = 'white';
+            
+            log.innerHTML = ''; // Clear for streaming
+            let fullText = '';
             
             try {
                 const config = {
@@ -423,35 +473,77 @@
                     wasmAgent = new AgentClass(config.apiUrl, config.apiKey, config.provider);
                 }
 
+                abortController = new AbortController();
                 const start = Date.now();
-                const result = await wasmAgent.run_task(
+
+                await wasmAgent.run_task_stream(
                     config.modelId, 
                     config.prompt, 
                     config.systemPrompt, 
-                    config.temp
+                    config.temp,
+                    (chunk) => {
+                        fullText += chunk;
+                        log.innerHTML = marked.parse(fullText);
+                        // Auto-scroll to bottom
+                        log.scrollTop = log.scrollHeight;
+                    },
+                    abortController.signal
                 );
-                const duration = Date.now() - start;
 
+                const duration = Date.now() - start;
                 document.getElementById('timing').textContent = `${duration}ms`;
-                log.innerHTML = marked.parse(result);
-                hljs.highlightAll();
                 
-                saveHistory(config.prompt, result, duration);
+                // Final render to ensure highlight.js runs
+                log.innerHTML = marked.parse(fullText);
+                hljs.highlightAll();
+                addCopyButtons();
+                
+                saveHistory(config.prompt, fullText, duration);
                 statusPill.textContent = 'Success';
                 statusPill.style.background = 'var(--success)';
             } catch (e) {
-                log.innerHTML = `<div style="color: var(--error)">Error: ${e.message || e}</div>`;
-                statusPill.textContent = 'Error';
-                statusPill.style.background = 'var(--error)';
+                if (e.name === 'AbortError') {
+                    statusPill.textContent = 'Stopped';
+                    statusPill.style.background = 'var(--text-muted)';
+                } else {
+                    log.innerHTML = `<div style="color: var(--error)">Error: ${e.message || e}</div>`;
+                    statusPill.textContent = 'Error';
+                    statusPill.style.background = 'var(--error)';
+                }
             } finally {
                 runBtn.disabled = false;
+                stopBtn.style.display = 'none';
                 runBtn.innerHTML = 'Execute Agent';
+                abortController = null;
                 setTimeout(() => {
                     statusPill.textContent = 'Ready';
                     statusPill.style.background = 'var(--border)';
                     statusPill.style.color = 'var(--text-muted)';
                 }, 3000);
             }
+        }
+
+        function stopAgent() {
+            if (abortController) {
+                abortController.abort();
+            }
+        }
+
+        function addCopyButtons() {
+            const blocks = document.querySelectorAll('pre code');
+            blocks.forEach((block) => {
+                if (block.parentNode.querySelector('.copy-btn')) return;
+                const btn = document.createElement('button');
+                btn.className = 'copy-btn';
+                btn.textContent = 'Copy';
+                btn.onclick = () => {
+                    navigator.clipboard.writeText(block.textContent);
+                    btn.textContent = 'Copied!';
+                    setTimeout(() => btn.textContent = 'Copy', 2000);
+                };
+                block.parentNode.style.position = 'relative';
+                block.parentNode.appendChild(btn);
+            });
         }
 
         function saveConfig() {
