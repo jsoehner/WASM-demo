@@ -22,6 +22,8 @@ web-sys = { version = "0.3", features = [
     "Headers",
     "ReadableStream",
     "ReadableStreamDefaultReader",
+    "AbortSignal",
+    "TextDecoder",
 ] }
 js-sys = "0.3"
 

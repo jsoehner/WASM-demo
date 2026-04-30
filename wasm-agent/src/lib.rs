@@ -13,6 +13,8 @@ struct LlmMessage {
     content: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     tool_calls: Option<Vec<ToolCall>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    tool_call_id: Option<String>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -120,7 +122,7 @@ impl Agent {
         let response = self.call_llm(&model, &messages, temperature).await?;
         
         // Handle tool calls if any (for non-streaming)
-        if let Some(tool_calls) = response.tool_calls {
+        if let Some(ref tool_calls) = response.tool_calls {
             let mut tool_results = Vec::new();
             for tool in tool_calls {
                 if tool.function.name == "get_wasm_info" {
@@ -136,7 +138,7 @@ impl Agent {
                         role: "tool".to_string(),
                         content: Some(result),
                         tool_calls: None,
-                        // Note: Some APIs require tool_call_id here
+                        tool_call_id: Some(id),
                     });
                 }
                 // Call again with tool results
