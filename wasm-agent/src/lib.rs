@@ -277,6 +277,8 @@ impl Agent {
                         .ok_or_else(|| JsValue::from_str("No choices in OpenAI response"))
                 })
         }
+    }
+
     /// Run a task with streaming support.
     pub async fn run_task_stream(
         &self,
