@@ -50,46 +50,81 @@ impl Agent {
     }
 
     /// Run a task against the configured LLM provider.
-    pub async fn run_task(&self, model: String, prompt: String) -> Result<String, JsValue> {
+    pub async fn run_task(
+        &self,
+        model: String,
+        prompt: String,
+        system_prompt: String,
+        temperature: f32,
+    ) -> Result<String, JsValue> {
         if !self.api_url.starts_with("http://") && !self.api_url.starts_with("https://") {
             return Err(JsValue::from_str(
                 "Invalid API URL: must start with http:// or https://",
             ));
         }
 
+        if self.provider != "openai" && self.provider != "ollama" && self.provider != "openrouter" {
+            return Err(JsValue::from_str(
+                "Invalid provider: must be openai, ollama, or openrouter",
+            ));
+        }
+
         // Sanitize inputs
         let prompt: String = prompt.chars().filter(|&c| c != '\0').take(50_000).collect();
         let model: String = model.chars().filter(|&c| c != '\0').take(200).collect();
-
-        let system = LlmMessage {
-            role: "system".to_string(),
-            content: "You are a WASM agent. Answer the user directly and clearly."
-                .to_string(),
+        let system_prompt = if system_prompt.is_empty() {
+            "You are a WASM agent. Answer the user directly and clearly.".to_string()
+        } else {
+            system_prompt.chars().filter(|&c| c != '\0').take(5_000).collect()
         };
+
         let messages = vec![
-            system,
+            LlmMessage { role: "system".to_string(), content: system_prompt },
             LlmMessage { role: "user".to_string(), content: prompt },
         ];
 
-        self.call_llm(&model, &messages).await
+        self.call_llm(&model, &messages, temperature).await
     }
 
-    async fn call_llm(&self, model: &str, messages: &[LlmMessage]) -> Result<String, JsValue> {
+    async fn call_llm(
+        &self,
+        model: &str,
+        messages: &[LlmMessage],
+        temperature: f32,
+    ) -> Result<String, JsValue> {
         let (url, body) = if self.provider == "ollama" {
             let url = format!("{}/chat", self.api_url.trim_end_matches('/'));
             let body = serde_json::json!({
                 "model": model,
                 "messages": messages,
-                "stream": false
+                "stream": false,
+                "options": {
+                    "temperature": temperature
+                }
             });
             (url, body.to_string())
         } else {
-            // OpenAI-compatible (covers OpenRouter, OpenAI, Open WebUI, LM Studio, etc.)
+            // OpenAI-compatible
             let url = format!("{}/chat/completions", self.api_url.trim_end_matches('/'));
             let body = serde_json::json!({
                 "model": model,
                 "messages": messages,
-                "stream": false
+                "stream": false,
+                "temperature": temperature,
+                "tools": [
+                    {
+                        "type": "function",
+                        "function": {
+                            "name": "get_wasm_info",
+                            "description": "Get information about the WASM environment",
+                            "parameters": {
+                                "type": "object",
+                                "properties": {},
+                                "required": []
+                            }
+                        }
+                    }
+                ]
             });
             (url, body.to_string())
         };
@@ -108,6 +143,9 @@ impl Agent {
             headers
                 .set("X-Title", "WASM Agent")
                 .map_err(|_| JsValue::from_str("Failed to set X-Title header"))?;
+            headers
+                .set("HTTP-Referer", "https://github.com/jsoehner/wasm-demo")
+                .map_err(|_| JsValue::from_str("Failed to set HTTP-Referer header"))?;
         }
 
         let opts = RequestInit::new();
@@ -134,10 +172,16 @@ impl Agent {
                     .map_err(|_| JsValue::from_str("Failed to read error body"))?,
             )
             .await?;
+            let err_msg = err_text.as_string().unwrap_or_default();
+            let safe_err_msg = if err_msg.len() > 200 {
+                format!("{}...", &err_msg[..200])
+            } else {
+                err_msg
+            };
             return Err(JsValue::from_str(&format!(
                 "HTTP {}: {}",
                 status,
-                err_text.as_string().unwrap_or_default()
+                safe_err_msg
             )));
         }
 
@@ -155,18 +199,16 @@ impl Agent {
                 .map(|r| r.message.content)
                 .map_err(|e| {
                     JsValue::from_str(&format!(
-                        "Ollama parse error: {}. Response: {}",
-                        e,
-                        &raw[..raw.len().min(300)]
+                        "Ollama parse error: {}. The response format was unexpected.",
+                        e
                     ))
                 })
         } else {
             serde_json::from_str::<OpenAiResponse>(&raw)
                 .map_err(|e| {
                     JsValue::from_str(&format!(
-                        "OpenAI parse error: {}. Response: {}",
-                        e,
-                        &raw[..raw.len().min(300)]
+                        "OpenAI parse error: {}. The response format was unexpected.",
+                        e
                     ))
                 })
                 .and_then(|r| {

@@ -1,5 +1,20 @@
 # Generated release archives
 wasm-agent-viewer-*.zip
+wasm-agent-viewer-*.tar.gz
 
 # Playwright MCP artifacts
 .playwright-mcp/
+
+# Rust / WASM artifacts
+/target/
+/pkg/
+wasm-agent/target/
+wasm-agent/pkg/
+
+# Environment secrets
+.env
+.env.*
+
+# OS files
+.DS_Store
+Thumbs.db

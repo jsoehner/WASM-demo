@@ -4,7 +4,7 @@
 
 ### API Keys
 - ✅ **Never share API keys** - They provide access to paid LLM services
-- ✅ **API keys are stored only in your browser's localStorage**
+- ✅ **Opt-in key storage** - Keys are only stored in `localStorage` if you check the "Save API key" box
 - ✅ **Clear browser data** before switching computers
 - ✅ **Use browser DevTools** to inspect/modify localStorage
 
@@ -32,15 +32,17 @@
 
 The WASM agent now validates:
 - ✅ API URLs must start with `http://` or `https://`
-- ✅ Provider must be `openai` or `ollama`
-- ✅ Prompts are limited to 4096 characters
+- ✅ Provider must be `openai`, `ollama`, or `openrouter`
+- ✅ Prompts are limited to 50,000 characters
 - ✅ API keys are trimmed and validated
+- ✅ Error messages are redacted to prevent information leakage
 
 ### Request Safety
 
-- ✅ **30-second timeout** on all API requests
+- ✅ **30-second timeout** on all API requests (configurable)
 - ✅ **Rate limiting** handled with retry advice
-- ✅ **CORS protection** via CSP headers
+- ✅ **CSP protection** via `Content-Security-Policy` meta tags in the viewer
+- ✅ **DOM-based XSS protection** by using `textContent` for dynamic UI updates
 
 ## Building and Distributing
 

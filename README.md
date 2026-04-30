@@ -30,7 +30,7 @@ A WebAssembly-based LLM agent that runs in the browser and can interact with var
 
 2. **Build and package for distribution:**
    ```bash
-   ./build-and-package.sh
+   ./build.sh --package
    ```
 
 3. **Open the viewer:**
@@ -48,14 +48,10 @@ The project includes a complete packaging system for creating downloadable distr
 ### Creating a Distribution Package
 
 ```bash
-# Quick build and package
-./build-and-package.sh
-
-# Or just package (assumes WASM is already built)
-./package-viewer.sh
+# Build and package
+./build.sh --package
 ```
 
-Note: `package-viewer.sh` is a compatibility wrapper and delegates to `./package.sh`.
 
 This creates:
 - **`wasm-agent-viewer-YYYYMMDD.zip`** - Cross-platform browser package
@@ -123,19 +119,13 @@ To test the viewer on a physical Android or iOS device connected to the same Wi-
 ## Architecture
 
 - `wasm-agent/` - Rust crate compiled to WebAssembly
-- `viewer/` - Web interface that loads and runs the WASM agent
+- `index.html` - Web interface that loads and runs the WASM agent
 - `build.sh` - Build script using wasm-pack
 
 ## Script Status
 
-- Canonical build scripts: `build.sh`, `build.ps1`
-- Canonical package scripts: `package.sh`, `package.ps1`
-- Convenience wrapper: `build-and-package.sh`
-- Compatibility wrapper: `package-viewer.sh` (delegates to `package.sh`)
-- Deprecated legacy bootstrap scripts:
-   - `build_and_copy_viewer.sh`
-   - `build_and_run_agent.sh`
-   - `build_and_run_agent.ps1`
+- Canonical build script: `build.sh` (use `--package` to create a distribution)
+- Deprecated legacy bootstrap scripts: Removed
 
 ## Supported Providers
 
