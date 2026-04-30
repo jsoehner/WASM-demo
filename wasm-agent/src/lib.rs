@@ -115,8 +115,8 @@ impl Agent {
         };
 
         let mut messages = vec![
-            LlmMessage { role: "system".to_string(), content: Some(system_prompt), tool_calls: None },
-            LlmMessage { role: "user".to_string(), content: Some(prompt), tool_calls: None },
+            LlmMessage { role: "system".to_string(), content: Some(system_prompt), tool_calls: None, tool_call_id: None },
+            LlmMessage { role: "user".to_string(), content: Some(prompt), tool_calls: None, tool_call_id: None },
         ];
 
         let response = self.call_llm(&model, &messages, temperature).await?;
@@ -297,8 +297,8 @@ impl Agent {
         }
 
         let mut messages = vec![
-            LlmMessage { role: "system".to_string(), content: Some(system_prompt), tool_calls: None },
-            LlmMessage { role: "user".to_string(), content: Some(prompt), tool_calls: None },
+            LlmMessage { role: "system".to_string(), content: Some(system_prompt), tool_calls: None, tool_call_id: None },
+            LlmMessage { role: "user".to_string(), content: Some(prompt), tool_calls: None, tool_call_id: None },
         ];
 
         let (url, body) = if self.provider == "ollama" {
@@ -362,7 +362,8 @@ impl Agent {
 
             let chunk_val = js_sys::Reflect::get(&result, &JsValue::from_str("value"))?;
             let chunk_uint8: Uint8Array = chunk_val.dyn_into()?;
-            let chunk_text = decoder.decode_with_u8_array(&chunk_uint8)?;
+            let data = chunk_uint8.to_vec();
+            let chunk_text = decoder.decode_with_u8_array(&data)?;
             
             buffer.push_str(&chunk_text);
 
