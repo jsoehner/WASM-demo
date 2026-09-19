@@ -12,6 +12,11 @@ A WebAssembly-based LLM agent that runs in the browser and can interact with var
 - 📋 **Developer Experience** - One-click code block copying
 - 🌐 Universal WASM binary for all platforms
 
+## Architecture & Governance
+
+Architectural decisions, memory safety specifications, and governance records are documented in [docs/adr/](docs/adr/README.md).
+- [ADR 0001: WASM Agent Memory Safety, SSE Buffer Handling, and CI Workflow Resilience](docs/adr/0001-wasm-agent-memory-safety-and-ci-workflow-resilience.md)
+
 ## Screenshot
 
 ![Multi-Provider WASM Agent UI](docs/images/screenshot.png)

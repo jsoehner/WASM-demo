@@ -127,7 +127,7 @@ impl Agent {
             for tool in tool_calls {
                 if tool.function.name == "get_wasm_info" {
                     let result = self.execute_get_wasm_info();
-                    tool_results.push((tool.id, result));
+                    tool_results.push((tool.id.clone(), result));
                 }
             }
 
@@ -296,7 +296,7 @@ impl Agent {
             return Err(JsValue::from_str(&format!("Invalid provider: {:?}", providers)));
         }
 
-        let mut messages = vec![
+        let messages = vec![
             LlmMessage { role: "system".to_string(), content: Some(system_prompt), tool_calls: None, tool_call_id: None },
             LlmMessage { role: "user".to_string(), content: Some(prompt), tool_calls: None, tool_call_id: None },
         ];
@@ -369,13 +369,13 @@ impl Agent {
 
             // Process lines (SSE format)
             while let Some(idx) = buffer.find('\n') {
-                let line = buffer[..idx].trim();
+                let line = buffer[..idx].trim().to_string();
                 buffer = buffer[idx + 1..].to_string();
 
                 if line.is_empty() { continue; }
 
                 if self.provider == "ollama" {
-                    if let Ok(res) = serde_json::from_str::<OllamaResponse>(line) {
+                    if let Ok(res) = serde_json::from_str::<OllamaResponse>(&line) {
                         if let Some(content) = res.message.content {
                             on_chunk.call1(&JsValue::NULL, &JsValue::from_str(&content))?;
                         }
