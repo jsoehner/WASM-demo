@@ -100,6 +100,19 @@ cd /d "%~dp0"
 python -c "from http.server import HTTPServer,SimpleHTTPRequestHandler; m={**SimpleHTTPRequestHandler.extensions_map,'.wasm':'application/wasm'}; SimpleHTTPRequestHandler.extensions_map=m; HTTPServer(('%BIND%',%PORT%),SimpleHTTPRequestHandler).serve_forever()"
 EOF
 
+    # --- start-server.ps1 (Windows PowerShell) ---
+    cat > "${PACKAGE_NAME}/start-server.ps1" << 'EOF'
+param(
+    [int]$Port = 8000,
+    [string]$Bind = "127.0.0.1"
+)
+Set-Location $PSScriptRoot
+Write-Host "Starting server at http://${Bind}:${Port}"
+Write-Host "Press Ctrl+C to stop."
+python -c "from http.server import HTTPServer,SimpleHTTPRequestHandler; m={**SimpleHTTPRequestHandler.extensions_map,'.wasm':'application/wasm'}; SimpleHTTPRequestHandler.extensions_map=m; HTTPServer(('$Bind',$Port),SimpleHTTPRequestHandler).serve_forever()"
+EOF
+
+
     # Create archive
     if command -v zip &>/dev/null; then
         zip -qr "${PACKAGE_NAME}.zip" "${PACKAGE_NAME}"
