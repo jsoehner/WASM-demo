@@ -61,7 +61,7 @@ jobs:
 
     steps:
       - name: Download canonical distribution
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: universal-viewer-package
           path: dist-artifact
