@@ -328,11 +328,8 @@
 
         <div class="form-group" style="margin-bottom: 1rem;">
             <label for="api-key">API Key</label>
-            <input type="password" id="api-key" placeholder="••••••••••••••••" oninput="saveConfig()">
-            <div style="display: flex; align-items: center; gap: 0.5rem; margin-top: 0.5rem;">
-                <input type="checkbox" id="save-key" onchange="saveConfig()" style="width: auto;">
-                <label for="save-key" style="margin: 0;">Persist key in browser</label>
-            </div>
+            <input type="password" id="api-key" placeholder="••••••••••••••••">
+            <span style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.25rem; display: block;">API key is kept in memory for the session and never stored in browser storage.</span>
         </div>
 
         <span class="advanced-toggle" onclick="toggleAdvanced()">⚙️ Advanced Settings</span>
@@ -506,7 +503,11 @@
                     statusPill.textContent = 'Stopped';
                     statusPill.style.background = 'var(--text-muted)';
                 } else {
-                    log.innerHTML = `<div style="color: var(--error)">Error: ${e.message || e}</div>`;
+                    const errDiv = document.createElement('div');
+                    errDiv.style.color = 'var(--error)';
+                    errDiv.textContent = `Error: ${e.message || e}`;
+                    log.innerHTML = '';
+                    log.appendChild(errDiv);
                     statusPill.textContent = 'Error';
                     statusPill.style.background = 'var(--error)';
                 }
@@ -547,31 +548,31 @@
         }
 
         function saveConfig() {
-            const shouldSaveKey = document.getElementById('save-key').checked;
             const config = {
                 provider: document.getElementById('provider').value,
                 modelId: document.getElementById('model-id').value,
                 apiUrl: document.getElementById('api-url').value,
-                apiKey: shouldSaveKey ? document.getElementById('api-key').value : '',
                 prompt: document.getElementById('prompt').value,
                 systemPrompt: document.getElementById('system-prompt').value,
-                temp: document.getElementById('temperature').value,
-                saveKey: shouldSaveKey
+                temp: document.getElementById('temperature').value
             };
             localStorage.setItem('wasm-agent-config', JSON.stringify(config));
         }
 
         function loadConfig() {
             const saved = JSON.parse(localStorage.getItem('wasm-agent-config') || '{}');
+            if (saved.apiKey || saved.saveKey) {
+                delete saved.apiKey;
+                delete saved.saveKey;
+                localStorage.setItem('wasm-agent-config', JSON.stringify(saved));
+            }
             if (saved.provider) {
                 document.getElementById('provider').value = saved.provider;
                 document.getElementById('model-id').value = saved.modelId;
                 document.getElementById('api-url').value = saved.apiUrl;
-                document.getElementById('api-key').value = saved.apiKey || '';
                 document.getElementById('prompt').value = saved.prompt || '';
                 document.getElementById('system-prompt').value = saved.systemPrompt || '';
                 document.getElementById('temperature').value = saved.temp || 0.7;
-                document.getElementById('save-key').checked = !!saved.saveKey;
                 updateVal('temp-val', saved.temp || 0.7);
             }
 
@@ -595,13 +596,39 @@
         function displayHistory() {
             const history = JSON.parse(localStorage.getItem('wasm-agent-history') || '[]');
             const list = document.getElementById('history-list');
-            list.innerHTML = history.length ? history.map(item => `
-                <div class="history-item">
-                    <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.5rem;">${item.timestamp} • ${item.duration}ms</div>
-                    <div style="font-weight: 600; margin-bottom: 0.5rem;">Q: ${item.prompt}</div>
-                    <div class="markdown-body" style="font-size: 0.9rem;">${marked.parse(item.response)}</div>
-                </div>
-            `).join('') : '<p style="color: var(--text-muted)">No history yet.</p>';
+            list.innerHTML = '';
+            if (!history.length) {
+                const empty = document.createElement('p');
+                empty.style.color = 'var(--text-muted)';
+                empty.textContent = 'No history yet.';
+                list.appendChild(empty);
+                return;
+            }
+            history.forEach(item => {
+                const itemDiv = document.createElement('div');
+                itemDiv.className = 'history-item';
+
+                const metaDiv = document.createElement('div');
+                metaDiv.style.fontSize = '0.75rem';
+                metaDiv.style.color = 'var(--text-muted)';
+                metaDiv.style.marginBottom = '0.5rem';
+                metaDiv.textContent = `${item.timestamp} • ${item.duration}ms`;
+
+                const promptDiv = document.createElement('div');
+                promptDiv.style.fontWeight = '600';
+                promptDiv.style.marginBottom = '0.5rem';
+                promptDiv.textContent = `Q: ${item.prompt}`;
+
+                const responseDiv = document.createElement('div');
+                responseDiv.className = 'markdown-body';
+                responseDiv.style.fontSize = '0.9rem';
+                responseDiv.innerHTML = marked.parse(item.response || '');
+
+                itemDiv.appendChild(metaDiv);
+                itemDiv.appendChild(promptDiv);
+                itemDiv.appendChild(responseDiv);
+                list.appendChild(itemDiv);
+            });
             hljs.highlightAll();
         }
 
