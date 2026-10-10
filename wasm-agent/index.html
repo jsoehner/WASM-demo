@@ -4,9 +4,9 @@
 <body>
     <div class="card">
         <h2>🤖 Multi-Provider Agent</h2>
-        <select id="provider"><option value="openai">OpenAI / Open WebUI</option><option value="ollama">Ollama (Native)</option></select>
-        <input type="text" id="model-id" value="llama3" placeholder="Model ID">
-        <input type="text" id="api-url" value="http://localhost:11434/api" placeholder="API URL">
+        <select id="provider" onchange="onProviderChange()"><option value="openrouter">OpenRouter (Free)</option><option value="openai">OpenAI / Open WebUI</option><option value="ollama">Ollama (Native)</option></select>
+        <input type="text" id="model-id" value="mistralai/mistral-7b-instruct:free" placeholder="Model ID">
+        <input type="text" id="api-url" value="https://openrouter.ai/api/v1" placeholder="API URL">
         <input type="password" id="api-key" placeholder="API Key (Optional)">
         <input type="text" id="prompt" value="Calculate the length of 'WebAssembly'.">
         <button id="run-btn">Execute Agent</button>
@@ -14,6 +14,19 @@
     </div>
     <script type="module">
         import init, { Agent } from './pkg/wasm_agent.js';
+        const PROVIDER_DEFAULTS = {
+            openrouter: { url: 'https://openrouter.ai/api/v1', model: 'mistralai/mistral-7b-instruct:free' },
+            openai:     { url: 'https://api.openai.com/v1',     model: 'gpt-4o-mini' },
+            ollama:     { url: 'http://localhost:11434/api',     model: 'llama3' },
+        };
+        window.onProviderChange = function() {
+            const provider = document.getElementById('provider').value;
+            const defaults = PROVIDER_DEFAULTS[provider];
+            if (defaults) {
+                document.getElementById('api-url').value = defaults.url;
+                document.getElementById('model-id').value = defaults.model;
+            }
+        };
         async function run() {
             await init();
             document.getElementById('run-btn').addEventListener('click', async () => {

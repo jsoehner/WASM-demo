@@ -1,0 +1,109 @@
+name: Build and Deploy WASM (Legacy Manual)
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  build-wasm:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v4.2.2
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@02cb101ec7c40f2c49e1d9714d64511d8e1b74de
+        with:
+          toolchain: stable
+          targets: wasm32-unknown-unknown
+
+      - name: Cache Rust dependencies
+        uses: Swatinem/rust-cache@49a0bdc70d2e1b713ca9e2869b211fcce03d3c1c # v2.7.7
+
+      - name: Install wasm-pack
+        uses: jetli/wasm-pack-action@0d096b08b4e5a7de8c28de67e11e945404e9eefa # v0.4.0
+        with:
+          version: 'latest'
+
+      - name: Build WASM package
+        run: bash build.sh
+
+      - name: Upload WASM files
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: wasm-pkg
+          path: |
+            pkg/wasm_agent.js
+            pkg/wasm_agent_bg.wasm
+            pkg/wasm_agent.d.ts
+            pkg/wasm_agent_bg.wasm.d.ts
+
+  deploy:
+    needs: build-wasm
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v4.2.2
+
+      - name: Download WASM files
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: wasm-pkg
+          path: downloaded/
+
+      - name: Assemble deployment directory
+        run: |
+          set -euo pipefail
+          mkdir -p deployment/pkg
+          cp index.html deployment/
+
+          for f in wasm_agent.js wasm_agent_bg.wasm wasm_agent.d.ts wasm_agent_bg.wasm.d.ts; do
+            src="$(find downloaded -type f -name "$f" | head -n1 || true)"
+            if [ -z "$src" ]; then
+              echo "Missing artifact file: $f"
+              exit 1
+            fi
+            cp "$src" "deployment/pkg/$f"
+          done
+
+          ls -la deployment/pkg
+
+      - name: Upload deployment artifact
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: viewer-deployment
+          path: deployment/
+
+  test:
+    needs: deploy
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download deployment
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: viewer-deployment
+          path: deployment/
+
+      - name: Verify deployment structure
+        run: |
+          set -euo pipefail
+          test -f deployment/index.html
+          test -f deployment/pkg/wasm_agent.js
+          test -f deployment/pkg/wasm_agent_bg.wasm
+          test -f deployment/pkg/wasm_agent.d.ts
+          test -f deployment/pkg/wasm_agent_bg.wasm.d.ts
+
+      - name: Test local server startup
+        run: |
+          set -euo pipefail
+          python3 -m http.server 8000 --directory deployment >/tmp/server.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill $SERVER_PID || true' EXIT
+          sleep 2
+          curl -fsS http://localhost:8000/index.html >/dev/null
+          kill $SERVER_PID || true

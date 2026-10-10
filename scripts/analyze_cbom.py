@@ -137,6 +137,7 @@ def assimilate_third_party_cbom(
                         "primitive": a.get("primitive", "unknown"),
                         "key_length": a.get("key_length", "N/A"),
                         "pqc_status": a.get("pqc_status", "QUANTUM-VULNERABLE"),
+                        "asset_type": "assimilated-dependency-crypto",
                         "confidence": matched_cat.get("confidence", "HIGH"),
                         "source": f"Assimilated Upstream CBOM: {matched_cat.get('source', 'Known Catalog')}",
                         "remediation": a.get("remediation", ""),
@@ -158,6 +159,7 @@ def assimilate_third_party_cbom(
 
     if total_deps > 0:
         coverage_pct = round((verified_count / total_deps) * 100, 1)
+        # Confidence score incorporates first-party verified clean code (+1)
         confidence_score = round(((verified_count + 1) / (total_deps + 1)) * 100, 1)
         if confidence_score >= 80:
             rating = "HIGH"
@@ -181,8 +183,7 @@ def assimilate_third_party_cbom(
         "coverage_percentage": coverage_pct,
         "confidence_score": confidence_score,
         "confidence_rating": rating,
-        "confidence_badge": rating_badge,
-        "os_inventory_status": "Updated" if any(c.get("source") == "OS Inventory" for c in catalog) else "Not Updated"
+        "confidence_badge": rating_badge
     }
 
     return assimilated_crypto, verified_inert, unassimilated, confidence_metrics
@@ -280,6 +281,10 @@ def analyze_cbom(cbom_path: Path, sbom_path: Optional[Path] = None, catalog_path
         crypto_assets.append(a)
         asset_types_counter[a["asset_type"]] += 1
         algorithm_counter[a["algorithm"]] += 1
+        if a["pqc_status"] == "POST-QUANTUM READY":
+            pqc_assets.append(a)
+        elif a["pqc_status"] == "QUANTUM-VULNERABLE":
+            vulnerable_assets.append(a)
 
     symmetric_assets = [a for a in crypto_assets if a["pqc_status"] == "CLASSICAL/SYMMETRIC"]
     asym_total = len(pqc_assets) + len(vulnerable_assets)
@@ -332,7 +337,7 @@ def generate_markdown_summary(summary: dict) -> str:
     md.append("|---|---|---|")
     md.append(f"| **Post-Quantum Ready (PQC)** | **{summary['pqc_ready_count']}** | 🟢 Quantum-Resistant (NIST FIPS 203/204/205) |")
     md.append(f"| **Quantum-Vulnerable (Backlog)** | **{summary['quantum_vulnerable_count']}** | 🔴 At Risk of 'Harvest Now, Decrypt Later' |")
-    md.append(f"| **Classical Symmetric / Digest** | **{summary['symmetric_count']}** | 🟡 Classical Security (Requires AES-256 / SHA-256+) |")
+    md.append(f"| **Classical Symmetric / Hashing** | **{summary['symmetric_count']}** | 🟡 Classical Security (Requires AES-256 / SHA-256+) |")
     md.append(f"| **Asymmetric PQC Migration Progress** | **{summary['pqc_migration_display']}** | {summary['pqc_migration_note']} |\n")
 
     # Supply Chain Coverage & Confidence Scorecard
@@ -342,27 +347,26 @@ def generate_markdown_summary(summary: dict) -> str:
     md.append("| **First-Party Code (`src/`)** | **100% Audited** (0 Custom Primitives) | 🟢 **HIGH** (Direct AST & SAST verified clean) |")
     if conf["total_dependencies"] > 0:
         md.append(f"| **Third-Party Supply Chain** | **{conf['coverage_percentage']}%** ({conf['verified_dependencies_count']} of {conf['total_dependencies']} dependencies cataloged) | {conf['confidence_badge']} (Known profiles assimilated) |")
-        md.append(f"| **Overall Audit Confidence Score** | **{conf['confidence_score']}%** | {conf['confidence_badge']} ({conf['unassimilated_dependencies_count']} unassimilated supply chain dependencies) |\n")
+        md.append(f"| **Overall Audit Confidence Score** | **{conf['confidence_score']}%** | **{conf['confidence_badge']}** ({conf['unassimilated_dependencies_count']} unassimilated supply chain dependencies) |\n")
     else:
         md.append("| **Third-Party Supply Chain** | **No external dependencies in SBOM** | 🟢 **HIGH** (Self-contained scope) |\n")
 
-    # OS Inventory Status
-    if conf["os_inventory_status"] == "Updated":
-        md.append(f"| **System OS Inventory** | **Active & Updated** | 🟢 **High Integrity** (Local OS crypto components cataloged) |\n")
-    else:
-        md.append(f"| **System OS Inventory** | **Pending Update** | 🟡 **Warning** (Local OS crypto components not yet inventoried) |\n")
+    def format_locations(occurrences: list) -> str:
+        if not occurrences:
+            return "Dependencies / External"
+        locs = [f"`{occ.get('location', '')}`" for occ in occurrences if occ.get("location")]
+        return "<br>".join(locs) if locs else "Dependencies / External"
 
     # Post-Quantum Ready Assets Table
-    md.append("### ✅ Post-Quantum Ready Assets\n")
+    md.append("### ✅ Post-Quantum Cryptography Migrated Assets\n")
     if summary["pqc_assets"]:
         md.append("| Component Name | Primitive | Key/Parameter Set | PQC Standard | Provenance / Location(s) |")
         md.append("|---|---|---|---|---|")
         for asset in summary["pqc_assets"]:
-            std = "ML-KEM-768 (FIPS 203)" if "KEM" in asset["algorithm"].upper() or "KYBER" in asset["algorithm"].upper() else \
-                  "ML-DSA-65 (FIPS 204)" if "DSA" in asset["algorithm"].upper() or "DILITHIUM" in asset["algorithm"].upper() else \
-                  "SLH-DSA (FIPS 205)" if "SLH" in asset["algorithm"].upper() or "SPHINCS" in asset["algorithm"].upper() else \
-                  "LMS/XMSS (RFC 8391/8554)" if "LMS" in asset["algorithm"].upper() or "XMSS" in asset["algorithm"].upper() else \
-                  "PQC Algorithm"
+            std = "NIST FIPS 203 (ML-KEM)" if "KEM" in asset["algorithm"].upper() or "KYBER" in asset["algorithm"].upper() else \
+                  "NIST FIPS 204 (ML-DSA)" if "DSA" in asset["algorithm"].upper() or "DILITHIUM" in asset["algorithm"].upper() else \
+                  "NIST FIPS 205 (SLH-DSA)" if "SLH" in asset["algorithm"].upper() or "SPHINCS" in asset["algorithm"].upper() else \
+                  "Stateful Hash (RFC 8554/8391)" if "LMS" in asset["algorithm"].upper() or "XMSS" in asset["algorithm"].upper() else "PQC Algorithm"
             locs_str = format_locations(asset.get("occurrences", []))
             prov = asset.get("source", "First-Party Code")
             md.append(f"| `{asset['name']}` | {asset['primitive']} | {asset['key_length']} | {std} | {prov}<br>{locs_str} |")
@@ -378,8 +382,8 @@ def generate_markdown_summary(summary: dict) -> str:
         for asset in summary["vulnerable_assets"]:
             algo_u = asset["algorithm"].upper()
             recom = asset.get("remediation") or (
-                "ML-KEM-768 / Kyber (FIPS 203)" if any(k in algo_u for k in ["RSA", "DH", "ECDH", "X25519"]) and "SIGN" not in asset["primitive"] else \
-                "ML-DSA-65 / Dilithium (FIPS 204)" if any(k in algo_u for k in ["ECDSA", "ED25519", "DSA"]) or "SIGN" in asset["primitive"] else \
+                "ML-KEM-768 / Kyber (FIPS 203)" if any(k in algo_u for k in ["RSA", "DH", "ECDH", "X25519"]) and "SIGN" not in asset["primitive"] else
+                "ML-DSA-65 / Dilithium (FIPS 204)" if any(k in algo_u for k in ["ECDSA", "ED25519", "DSA"]) or "SIGN" in asset["primitive"] else
                 "ML-KEM (KEM) or ML-DSA (Signatures)"
             )
 
@@ -399,7 +403,7 @@ def generate_markdown_summary(summary: dict) -> str:
         md.append("")
     else:
         if summary["asymmetric_total_count"] == 0:
-            md.append("> ℹ️ **No quantum-vulnerable asymmetric assets found.** Asymmetric cryptographic primitives were not detected in current scope.\n")
+            md.append("> ℹ️ **No quantum-vulnerable asymmetric assets found.** No asymmetric cryptographic primitives were detected in current scope.\n")
         else:
             md.append("> ✅ **Zero quantum-vulnerable asymmetric assets found.** All public-key cryptography conforms to post-quantum standards.\n")
 
@@ -417,8 +421,18 @@ def generate_markdown_summary(summary: dict) -> str:
             prov = asset.get("source", "First-Party Code")
             md.append(f"| `{asset['name']}` | {asset['primitive']} | {asset['key_length']} | {sec_note} | {prov}<br>{locs_str} |")
         md.append("")
-    else:
-        md.append("> ℹ️ **No classical symmetric assets detected.**\n")
+
+    # Unassimilated Dependencies (Blind Spots) Table
+    if summary["unassimilated_dependencies"]:
+        md.append("### ⚠️ Unassimilated Third-Party Binaries & Cryptographic Blind Spots\n")
+        md.append("> ℹ️ *The following third-party dependencies do not have verified upstream CBOM attestations in the catalog. They lower the audit confidence score until explicit CBOMs or attestations are published.* \n")
+        md.append("| Dependency Name | Version | Package URL (purl) | Status |")
+        md.append("|---|---|---|---|")
+        for dep in summary["unassimilated_dependencies"][:15]:
+            md.append(f"| `{dep['name']}` | {dep['version']} | `{dep['purl'] or 'N/A'}` | 🟡 Unassimilated (No upstream CBOM) |")
+        if len(summary["unassimilated_dependencies"]) > 15:
+            md.append(f"| *... and {len(summary['unassimilated_dependencies']) - 15} more unassimilated dependencies* | | | |")
+        md.append("")
 
     return "\n".join(md)
 
@@ -429,13 +443,12 @@ def print_report(summary: dict):
     print("=" * 70)
     print(f"Format: {summary['bomFormat']} (v{summary['specVersion']})")
     print(f"First-Party Components Scanned: {summary['total_components']}")
-    print(f"Total Tracked Crypto Assets: {summary['total_crypto_assets']}")
+    print(f"Total Tracked Cryptographic Assets: {summary['total_crypto_assets']}")
     print(f"Quantum-Vulnerable Assets: {summary['quantum_vulnerable_count']}")
     print(f"Post-Quantum Ready Assets: {summary['pqc_ready_count']}")
     print(f"PQC Migration Progress: {summary['pqc_migration_display']}")
     conf = summary["confidence_metrics"]
     print(f"Audit Confidence: {conf['confidence_badge']} ({conf['confidence_score']}%)")
-    print(f"OS Inventory Status: {conf['os_inventory_status']}")
     print("-" * 70)
 
     if summary.get("asset_types"):
@@ -503,6 +516,7 @@ def main():
             print(f"Saved JSON report to: {args.json}")
     elif not args.markdown:
         print_report(summary)
+
 
 if __name__ == "__main__":
     main()
