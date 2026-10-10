@@ -225,3 +225,6 @@ export PATH="$HOME/.cargo/bin:$PATH"
 
 - Root `.gitignore` now ignores generated release archives:
    - `wasm-agent-viewer-*.zip`
+
+## 🛡️ Security & Cryptographic Posture
+This project tracks Software & Cryptographic Bill of Materials (SBOM & CBOM) and Post-Quantum Cryptography (PQC) readiness. See the latest [Cryptographic Audit & PQC Migration Report](docs/security/CRYPTOGRAPHIC_AUDIT.md).
