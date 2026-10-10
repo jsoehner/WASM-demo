@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html>
-<head><title>Multi-Platform WASM Agent</title><style>body{font-family:sans-serif;max-width:800px;margin:2rem auto;padding:1rem;background:#f8f9fa;}.card{background:white;padding:20px;border-radius:12px;box-shadow:0 4px 15px rgba(0,0,0,0.1);}input,select,button{padding:10px;margin-bottom:10px;width:100%;box-sizing:border-box;}button{background:#007bff;color:white;border:none;cursor:pointer;}#log{background:#212529;color:#39ff14;padding:1rem;white-space:pre-wrap;margin-top:10px;min-height:80px;}</style></head>
+<head><title>Multi-Platform WASM Agent</title><style>body{font-family:sans-serif;max-width:800px;margin:2rem auto;padding:1rem;background:#f8f9fa;}.card{background:white;padding:20px;border-radius:12px;}input,select,button{padding:10px;margin-bottom:10px;width:100%;}button{background:#007bff;color:white;border:none;cursor:pointer;}#log{background:#212529;color:#39ff14;padding:1rem;white-space:pre-wrap;min-height:80px;}</style></head>
 <body>
     <div class="card">
         <h2>🤖 Multi-Provider Agent</h2>
@@ -17,8 +17,7 @@
         async function run() {
             await init();
             document.getElementById('run-btn').addEventListener('click', async () => {
-                const log = document.getElementById('log');
-                log.textContent = "Processing...";
+                const log = document.getElementById('log'); log.textContent = "Processing...";
                 try {
                     const agent = new Agent(document.getElementById('api-url').value, document.getElementById('api-key').value, document.getElementById('provider').value);
                     log.textContent = await agent.run_task(document.getElementById('model-id').value, document.getElementById('prompt').value);
