@@ -36,18 +36,6 @@
 | Dependency Name | Version | Package URL (purl) | Status |
 |---|---|---|---|
 | `Swatinem/rust-cache` | v2.7.7 | `pkg:github/Swatinem/rust-cache@v2.7.7` | 🟡 Unassimilated (No upstream CBOM) |
-| `Swatinem/rust-cache` | v2.7.7 | `pkg:github/Swatinem/rust-cache@v2.7.7` | 🟡 Unassimilated (No upstream CBOM) |
-| `Swatinem/rust-cache` | v2.7.7 | `pkg:github/Swatinem/rust-cache@v2.7.7` | 🟡 Unassimilated (No upstream CBOM) |
-| `Swatinem/rust-cache` | v2.7.7 | `pkg:github/Swatinem/rust-cache@v2.7.7` | 🟡 Unassimilated (No upstream CBOM) |
-| `Swatinem/rust-cache` | v2.7.7 | `pkg:github/Swatinem/rust-cache@v2.7.7` | 🟡 Unassimilated (No upstream CBOM) |
-| `Swatinem/rust-cache` | v2.7.7 | `pkg:github/Swatinem/rust-cache@v2.7.7` | 🟡 Unassimilated (No upstream CBOM) |
-| `Swatinem/rust-cache` | v2.7.7 | `pkg:github/Swatinem/rust-cache@v2.7.7` | 🟡 Unassimilated (No upstream CBOM) |
-| `actions/checkout` | v4.2.2 | `pkg:github/actions/checkout@v4.2.2` | 🟡 Unassimilated (No upstream CBOM) |
-| `actions/checkout` | v4.2.2 | `pkg:github/actions/checkout@v4.2.2` | 🟡 Unassimilated (No upstream CBOM) |
-| `actions/checkout` | v4.2.2 | `pkg:github/actions/checkout@v4.2.2` | 🟡 Unassimilated (No upstream CBOM) |
-| `actions/checkout` | v4.2.2 | `pkg:github/actions/checkout@v4.2.2` | 🟡 Unassimilated (No upstream CBOM) |
-| `actions/checkout` | v4.2.2 | `pkg:github/actions/checkout@v4.2.2` | 🟡 Unassimilated (No upstream CBOM) |
-| `actions/checkout` | v4.2.2 | `pkg:github/actions/checkout@v4.2.2` | 🟡 Unassimilated (No upstream CBOM) |
 | `actions/checkout` | v4.2.2 | `pkg:github/actions/checkout@v4.2.2` | 🟡 Unassimilated (No upstream CBOM) |
 | `actions/checkout` | v7.0.1 | `pkg:github/actions/checkout@v7.0.1` | 🟡 Unassimilated (No upstream CBOM) |
 | *... and 81 more unassimilated dependencies* | | | |
