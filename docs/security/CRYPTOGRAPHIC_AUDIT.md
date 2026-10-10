@@ -16,8 +16,8 @@
 | Evaluation Layer | Coverage / Status | Audit Confidence Assessment |
 |---|---|---|
 | **First-Party Code (`src/`)** | **100% Audited** (0 Custom Primitives) | 🟢 **HIGH** (Direct AST & SAST verified clean) |
-| **Third-Party Supply Chain** | **0.0%** (0 of 90 dependencies cataloged) | 🔴 LOW (Known profiles assimilated) |
-| **Overall Audit Confidence Score** | **1.1%** | **🔴 LOW** (90 unassimilated supply chain dependencies) |
+| **Third-Party Supply Chain** | **0.0%** (0 of 96 dependencies cataloged) | 🔴 LOW (Known profiles assimilated) |
+| **Overall Audit Confidence Score** | **1.0%** | **🔴 LOW** (96 unassimilated supply chain dependencies) |
 
 ### ✅ Post-Quantum Cryptography Migrated Assets
 
@@ -50,4 +50,4 @@
 | `actions/checkout` | v4.2.2 | `pkg:github/actions/checkout@v4.2.2` | 🟡 Unassimilated (No upstream CBOM) |
 | `actions/checkout` | v4.2.2 | `pkg:github/actions/checkout@v4.2.2` | 🟡 Unassimilated (No upstream CBOM) |
 | `actions/checkout` | v7.0.1 | `pkg:github/actions/checkout@v7.0.1` | 🟡 Unassimilated (No upstream CBOM) |
-| *... and 75 more unassimilated dependencies* | | | |
+| *... and 81 more unassimilated dependencies* | | | |
