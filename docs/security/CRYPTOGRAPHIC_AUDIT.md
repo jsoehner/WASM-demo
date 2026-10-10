@@ -1,6 +1,6 @@
 ## 🛡️ Cryptographic Bill of Materials (CBOM) & PQC Migration Assessment
 
-**Format**: CycloneDX (v1.7) | **First-Party Code Crypto Assets**: 0 | **Total Tracked Crypto Assets**: 0
+**Format**: CycloneDX (v1.6) | **First-Party Code Crypto Assets**: 0 | **Total Tracked Crypto Assets**: 0
 
 ### 📊 Post-Quantum Migration Scorecard
 
@@ -16,8 +16,8 @@
 | Evaluation Layer | Coverage / Status | Audit Confidence Assessment |
 |---|---|---|
 | **First-Party Code (`src/`)** | **100% Audited** (0 Custom Primitives) | 🟢 **HIGH** (Direct AST & SAST verified clean) |
-| **Third-Party Supply Chain** | **0.0%** (0 of 2 dependencies cataloged) | 🔴 LOW (Known profiles assimilated) |
-| **Overall Audit Confidence Score** | **33.3%** | **🔴 LOW** (2 unassimilated supply chain dependencies) |
+| **Third-Party Supply Chain** | **0.0%** (0 of 90 dependencies cataloged) | 🔴 LOW (Known profiles assimilated) |
+| **Overall Audit Confidence Score** | **1.1%** | **🔴 LOW** (90 unassimilated supply chain dependencies) |
 
 ### ✅ Post-Quantum Cryptography Migrated Assets
 
@@ -35,5 +35,19 @@
 
 | Dependency Name | Version | Package URL (purl) | Status |
 |---|---|---|---|
-| `wasm-demo` | N/A | `N/A` | 🟡 Unassimilated (No upstream CBOM) |
-| `wasm-demo` | latest | `pkg:container/wasm-demo@latest` | 🟡 Unassimilated (No upstream CBOM) |
+| `Swatinem/rust-cache` | v2.7.7 | `pkg:github/Swatinem/rust-cache@v2.7.7` | 🟡 Unassimilated (No upstream CBOM) |
+| `Swatinem/rust-cache` | v2.7.7 | `pkg:github/Swatinem/rust-cache@v2.7.7` | 🟡 Unassimilated (No upstream CBOM) |
+| `Swatinem/rust-cache` | v2.7.7 | `pkg:github/Swatinem/rust-cache@v2.7.7` | 🟡 Unassimilated (No upstream CBOM) |
+| `Swatinem/rust-cache` | v2.7.7 | `pkg:github/Swatinem/rust-cache@v2.7.7` | 🟡 Unassimilated (No upstream CBOM) |
+| `Swatinem/rust-cache` | v2.7.7 | `pkg:github/Swatinem/rust-cache@v2.7.7` | 🟡 Unassimilated (No upstream CBOM) |
+| `Swatinem/rust-cache` | v2.7.7 | `pkg:github/Swatinem/rust-cache@v2.7.7` | 🟡 Unassimilated (No upstream CBOM) |
+| `Swatinem/rust-cache` | v2.7.7 | `pkg:github/Swatinem/rust-cache@v2.7.7` | 🟡 Unassimilated (No upstream CBOM) |
+| `actions/checkout` | v4.2.2 | `pkg:github/actions/checkout@v4.2.2` | 🟡 Unassimilated (No upstream CBOM) |
+| `actions/checkout` | v4.2.2 | `pkg:github/actions/checkout@v4.2.2` | 🟡 Unassimilated (No upstream CBOM) |
+| `actions/checkout` | v4.2.2 | `pkg:github/actions/checkout@v4.2.2` | 🟡 Unassimilated (No upstream CBOM) |
+| `actions/checkout` | v4.2.2 | `pkg:github/actions/checkout@v4.2.2` | 🟡 Unassimilated (No upstream CBOM) |
+| `actions/checkout` | v4.2.2 | `pkg:github/actions/checkout@v4.2.2` | 🟡 Unassimilated (No upstream CBOM) |
+| `actions/checkout` | v4.2.2 | `pkg:github/actions/checkout@v4.2.2` | 🟡 Unassimilated (No upstream CBOM) |
+| `actions/checkout` | v4.2.2 | `pkg:github/actions/checkout@v4.2.2` | 🟡 Unassimilated (No upstream CBOM) |
+| `actions/checkout` | v7.0.1 | `pkg:github/actions/checkout@v7.0.1` | 🟡 Unassimilated (No upstream CBOM) |
+| *... and 75 more unassimilated dependencies* | | | |
