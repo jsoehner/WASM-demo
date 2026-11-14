@@ -47,12 +47,12 @@
 | `Swatinem/rust-cache` | v2.7.7 | `pkg:github/Swatinem/rust-cache@v2.7.7` | 🟡 Unassimilated (No upstream CBOM) |
 | `bumpalo` | 3.20.2 | `pkg:cargo/bumpalo@3.20.2` | 🟡 Unassimilated (No upstream CBOM) |
 | `console_error_panic_hook` | 0.1.7 | `pkg:cargo/console_error_panic_hook@0.1.7` | 🟡 Unassimilated (No upstream CBOM) |
-| `dtolnay/rust-toolchain` | 02cb101ec7c40f2c49e1d9714d64511d8e1b74de | `pkg:github/dtolnay/rust-toolchain@02cb101ec7c40f2c49e1d9714d64511d8e1b74de` | 🟡 Unassimilated (No upstream CBOM) |
-| `dtolnay/rust-toolchain` | 02cb101ec7c40f2c49e1d9714d64511d8e1b74de | `pkg:github/dtolnay/rust-toolchain@02cb101ec7c40f2c49e1d9714d64511d8e1b74de` | 🟡 Unassimilated (No upstream CBOM) |
-| `dtolnay/rust-toolchain` | 02cb101ec7c40f2c49e1d9714d64511d8e1b74de | `pkg:github/dtolnay/rust-toolchain@02cb101ec7c40f2c49e1d9714d64511d8e1b74de` | 🟡 Unassimilated (No upstream CBOM) |
-| `dtolnay/rust-toolchain` | 02cb101ec7c40f2c49e1d9714d64511d8e1b74de | `pkg:github/dtolnay/rust-toolchain@02cb101ec7c40f2c49e1d9714d64511d8e1b74de` | 🟡 Unassimilated (No upstream CBOM) |
-| `dtolnay/rust-toolchain` | 02cb101ec7c40f2c49e1d9714d64511d8e1b74de | `pkg:github/dtolnay/rust-toolchain@02cb101ec7c40f2c49e1d9714d64511d8e1b74de` | 🟡 Unassimilated (No upstream CBOM) |
-| `dtolnay/rust-toolchain` | 02cb101ec7c40f2c49e1d9714d64511d8e1b74de | `pkg:github/dtolnay/rust-toolchain@02cb101ec7c40f2c49e1d9714d64511d8e1b74de` | 🟡 Unassimilated (No upstream CBOM) |
+| `dtolnay/rust-toolchain` | 683b588c487a69d01f6c6ddf40f036ff682cc2c8 | `pkg:github/dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8` | 🟡 Unassimilated (No upstream CBOM) |
+| `dtolnay/rust-toolchain` | 683b588c487a69d01f6c6ddf40f036ff682cc2c8 | `pkg:github/dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8` | 🟡 Unassimilated (No upstream CBOM) |
+| `dtolnay/rust-toolchain` | 683b588c487a69d01f6c6ddf40f036ff682cc2c8 | `pkg:github/dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8` | 🟡 Unassimilated (No upstream CBOM) |
+| `dtolnay/rust-toolchain` | 683b588c487a69d01f6c6ddf40f036ff682cc2c8 | `pkg:github/dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8` | 🟡 Unassimilated (No upstream CBOM) |
+| `dtolnay/rust-toolchain` | 683b588c487a69d01f6c6ddf40f036ff682cc2c8 | `pkg:github/dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8` | 🟡 Unassimilated (No upstream CBOM) |
+| `dtolnay/rust-toolchain` | 683b588c487a69d01f6c6ddf40f036ff682cc2c8 | `pkg:github/dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8` | 🟡 Unassimilated (No upstream CBOM) |
 | `itoa` | 1.0.18 | `pkg:cargo/itoa@1.0.18` | 🟡 Unassimilated (No upstream CBOM) |
 | *... and 23 more unassimilated dependencies* | | | |
 
