@@ -1,5 +1,7 @@
 # WASM LLM Agent Demo
 
+[![Build Verified](https://img.shields.io/badge/Build%20Verification-Verified%202026--11--20-brightgreen)](docs/BUILD_VERIFICATION.md)
+
 A WebAssembly-based LLM agent that runs in the browser and can interact with various LLM providers.
 
 ## Features
