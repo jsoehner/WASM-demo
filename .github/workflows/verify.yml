@@ -1,7 +1,6 @@
 name: JSI Build & Functional Verification
 
 on:
-  pull_request:
   workflow_dispatch:
 
 permissions:
@@ -13,9 +12,11 @@ jobs:
     uses: jsoehner/jsi-build-verify/.github/workflows/jsi-build-verify.yml@87d28a2c228e88f106e1021676f6cdb8a6c6a292 # main
     with:
       workflow_ref: 87d28a2c228e88f106e1021676f6cdb8a6c6a292
+      model: gemini-2.5-flash
+      thinking: low
       commit_mode: report-only
       fail_on_error: true
-      comment_on_pr: true
+      comment_on_pr: false
     secrets:
       GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
       OSS_MTLS_CLIENT_CERT: ${{ secrets.OSS_MTLS_CLIENT_CERT }}
