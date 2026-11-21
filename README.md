@@ -162,57 +162,41 @@ See [BUILD.md](BUILD.md) for detailed build instructions and architecture notes.
 
 The project includes GitHub Actions workflows for automated building and packaging:
 
-### Automated Release Workflow (`build-and-release-viewer.yml`)
+### Automated Build & Release Workflow (`build-and-release-viewer.yml`)
 
 **Triggers:**
-- Push to `main` branch (builds and tests)
-- Tag push with `v*` pattern (creates GitHub release)
-- Manual trigger with release type options
+- Push to `main` branch (builds, tests, and publishes a GitHub release)
+- Pull requests to `main` (builds and tests)
+- Manual trigger (`workflow_dispatch`) with `release_type` (`beta`, `stable`, `nightly`)
 
 **Features:**
-- ✅ Builds WASM module
+- ✅ Builds WASM module (`./build.sh --package`)
 - ✅ Creates complete distribution packages
 - ✅ Tests the distribution (server startup, file verification)
 - ✅ Creates GitHub releases with downloadable packages
-- ✅ Supports nightly builds
+- ✅ Supports on-demand manual builds and nightly releases
 
-### Manual Build Workflow (`manual-build-viewer.yml`)
-
-**Triggers:**
-- Manual workflow dispatch only
-
-**Features:**
-- ✅ Builds WASM module
-- ✅ Creates distribution packages
-- ✅ Optional artifact upload
-- ✅ Quick testing without releases
-
-### Cross-OS Validation Workflow (`build-viewer.yml`)
+### Functional Verification Workflow (`verify.yml`)
 
 **Purpose:**
-- Builds one canonical archive package
-- Validates extraction and package structure on Linux/macOS/Windows
-- Confirms one package is consumable across OS environments
+- Runs the reusable `jsoehner/jsi-build-verify` workflow on pull requests and manual dispatch for end-to-end build and functional verification
+
+### Governance & Compliance Workflows
+
+- `security-governance.yml` — Gitleaks secret scanning, Semgrep SAST, Trivy dependency scanning, and ADR gatekeeper
+- `sbom-cbom.yml` — Multi-language SBOM/CBOM and PQC governance (`jsi-bom-actions`)
+- `commit-lint.yml` — Conventional Commit enforcement
 
 ### Using the Workflows
 
-**Manual Build:**
-1. Go to GitHub Actions tab
-2. Select "Manual Build Viewer Packages"
-3. Click "Run workflow"
-4. Optionally enable artifact upload
-5. Download artifacts from the workflow run
+**Manual Build or Nightly Release:**
+1. Go to GitHub Actions → "Build and Release Viewer Packages"
+2. Click "Run workflow" and select `release_type` (`beta`, `stable`, or `nightly`)
+3. Download the uploaded `viewer-distribution-*` artifact from the workflow run (or from the `nightly` prerelease if `nightly` was selected)
 
 **Creating Releases:**
-1. Use the release script: `./release.sh patch` (or `minor`/`major`)
-2. Or manually: `git tag v1.0.0 && git push origin v1.0.0`
-3. The workflow will automatically build, test, and create a GitHub release
-4. Users can download the browser package archive from the release
-
-**Nightly Builds:**
-1. Go to Actions → "Build and Release Viewer Packages"
-2. Click "Run workflow" and select `nightly` release type
-3. Creates or updates a `nightly` release with latest code
+1. Merge changes to `main` (or use `./release.sh`)
+2. The workflow automatically builds, tests, bumps the patch tag, and publishes a GitHub release with downloadable browser package archives
 
 ## Build Environment Notes
 

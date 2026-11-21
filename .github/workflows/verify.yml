@@ -1,0 +1,19 @@
+name: JSI Build & Functional Verification
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  verify:
+    uses: jsoehner/jsi-build-verify/.github/workflows/jsi-build-verify.yml@main
+    with:
+      model: gemini-3.1-pro-preview
+      commit_mode: report-only
+      fail_on_error: true
+      comment_on_pr: true
+    secrets: inherit
