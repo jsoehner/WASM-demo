@@ -1,80 +1,58 @@
 # CI/CD Setup for WASM Agent Viewer
 
-This document describes the current GitHub Actions workflows for building,
-validating, and releasing the universal browser package.
+This document describes the active GitHub Actions workflows for building,
+verifying, securing, and releasing the universal browser package.
 
-## Canonical Workflows
+## Active Workflows
 
-### 1. `build-and-release-viewer.yml` (primary release workflow)
+### 1. `build-and-release-viewer.yml` (Primary Build & Release)
 
 Purpose:
-- Build the WASM package
-- Create release archive(s)
-- Test distribution contents
-- Publish GitHub Releases for `v*` tags
-- Support optional nightly release via manual dispatch
+- Build the WASM package (`./build.sh --package`)
+- Create universal browser distribution archive(s) (`.zip` / `.tar.gz`)
+- Test distribution contents and local server startup
+- Publish GitHub Releases on pushes to `main`
+- Support on-demand manual builds and nightly releases via `workflow_dispatch`
 
 Triggers:
 - Push to `main`
 - Pull requests to `main`
-- Tag push `v*`
-- Manual dispatch with `release_type`
+- Manual dispatch with `release_type` (`beta`, `stable`, `nightly`)
 
-### 2. `manual-build-viewer.yml` (manual package build)
-
-Purpose:
-- On-demand package build for testing or pre-release checks
-
-Trigger:
-- Manual dispatch only
-
-### 3. `build-viewer.yml` (validation workflow)
+### 2. `verify.yml` (JSI Build & Functional Verification)
 
 Purpose:
-- Build one canonical package on Linux
-- Run extraction smoke tests on Linux, macOS, and Windows
-- Verify that one package works across OS consumers
+- Invokes the reusable `jsoehner/jsi-build-verify` workflow (Pi Coding Agent) for end-to-end build and functional verification
+- Posts a verdict and token usage summary comment on pull requests
 
 Triggers:
-- Push to `main`
 - Pull requests
 - Manual dispatch
 
-## Legacy Manual Workflows
+### 3. `security-governance.yml` (Security & ADR Gates)
 
-These are retained for compatibility and manual troubleshooting only:
+Purpose:
+- Secret leak detection (Gitleaks)
+- SAST scanning (Semgrep)
+- Dependency & supply chain scanning (Trivy)
+- ADR security gatekeeper on pull requests
 
-- `release-viewer.yml`
-- `build-wasm.yml`
-- `build-windows-x64.yml`
-- `build-and-deploy.yml`
+### 4. `sbom-cbom.yml` (SBOM, CBOM & PQC Governance)
 
-They no longer run automatically on push/PR/tag.
+Purpose:
+- Generates and verifies multi-language SBOM/CBOM artifacts via `jsoehner/jsi-bom-actions`
 
-## Local Equivalents
+### 5. `commit-lint.yml` (Commit Hygiene)
+
+Purpose:
+- Enforces Conventional Commits on pushes and pull requests targeting `main`
+
+## Local Build
 
 Build and package locally:
 
 ```bash
-./package.sh
+./build.sh --package
 ```
 
-Quick wrapper:
-
-```bash
-./build-and-package.sh
-```
-
-Manual compatibility wrapper:
-
-```bash
-./package-viewer.sh
-```
-
-## Notes
-
-- Canonical package contract is validated in packaging scripts (`package.sh` and
-  `package.ps1`).
-- Build scripts now fail fast with actionable guidance if `cargo` is missing from
-  `PATH`.
-- Generated archives like `wasm-agent-viewer-*.zip` are ignored via root `.gitignore`.
+Generated archives (`wasm-agent-viewer-*.zip`, `wasm-agent-viewer-*.tar.gz`) are ignored via root `.gitignore`.
