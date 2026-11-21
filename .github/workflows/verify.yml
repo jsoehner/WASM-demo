@@ -9,9 +9,9 @@ permissions:
 
 jobs:
   verify:
-    uses: jsoehner/jsi-build-verify/.github/workflows/jsi-build-verify.yml@87d28a2c228e88f106e1021676f6cdb8a6c6a292 # main
+    uses: jsoehner/jsi-build-verify/.github/workflows/jsi-build-verify.yml@e73421afb9a5a7164eec11187a4794acde903e38 # v1.0.1
     with:
-      workflow_ref: 87d28a2c228e88f106e1021676f6cdb8a6c6a292
+      workflow_ref: e73421afb9a5a7164eec11187a4794acde903e38
       model: gemini-2.5-flash
       thinking: low
       commit_mode: report-only
