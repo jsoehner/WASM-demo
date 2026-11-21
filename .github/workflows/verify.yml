@@ -10,9 +10,9 @@ permissions:
 
 jobs:
   verify:
-    uses: jsoehner/jsi-build-verify/.github/workflows/jsi-build-verify.yml@main
+    uses: jsoehner/jsi-build-verify/.github/workflows/jsi-build-verify.yml@87d28a2c228e88f106e1021676f6cdb8a6c6a292 # main
     with:
-      model: gemini-3.1-pro-preview
+      workflow_ref: 87d28a2c228e88f106e1021676f6cdb8a6c6a292
       commit_mode: report-only
       fail_on_error: true
       comment_on_pr: true
