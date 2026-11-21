@@ -16,8 +16,8 @@
 | Evaluation Layer | Coverage / Status | Audit Confidence Assessment |
 |---|---|---|
 | **First-Party Code (`src/`, `scripts/`)** | **100% Audited** (0 Custom Primitives) | 🟢 **HIGH** (Direct AST & SAST verified) |
-| **Third-Party Supply Chain** | **50.6%** (39 of 77 dependencies cataloged) | 🟡 MEDIUM (Known profiles assimilated) |
-| **Overall Audit Confidence Score** | **51.3%** | 🟡 MEDIUM (38 unassimilated supply chain dependencies) |
+| **Third-Party Supply Chain** | **54.7%** (29 of 53 dependencies cataloged) | 🟡 MEDIUM (Known profiles assimilated) |
+| **Overall Audit Confidence Score** | **55.6%** | 🟡 MEDIUM (24 unassimilated supply chain dependencies) |
 
 | **System OS Inventory** | **Pending Update** | 🟡 **Warning** (Local OS crypto components not yet inventoried) |
 
@@ -40,21 +40,21 @@
 | Dependency Name | Version | Package URL (purl) | Status |
 |---|---|---|---|
 | `Swatinem/rust-cache` | v2.7.7 | `pkg:github/Swatinem/rust-cache@v2.7.7` | 🟡 Unassimilated (No upstream CBOM) |
-| `Swatinem/rust-cache` | v2.7.7 | `pkg:github/Swatinem/rust-cache@v2.7.7` | 🟡 Unassimilated (No upstream CBOM) |
-| `Swatinem/rust-cache` | v2.7.7 | `pkg:github/Swatinem/rust-cache@v2.7.7` | 🟡 Unassimilated (No upstream CBOM) |
-| `Swatinem/rust-cache` | v2.7.7 | `pkg:github/Swatinem/rust-cache@v2.7.7` | 🟡 Unassimilated (No upstream CBOM) |
-| `Swatinem/rust-cache` | v2.7.7 | `pkg:github/Swatinem/rust-cache@v2.7.7` | 🟡 Unassimilated (No upstream CBOM) |
-| `Swatinem/rust-cache` | v2.7.7 | `pkg:github/Swatinem/rust-cache@v2.7.7` | 🟡 Unassimilated (No upstream CBOM) |
 | `bumpalo` | 3.20.2 | `pkg:cargo/bumpalo@3.20.2` | 🟡 Unassimilated (No upstream CBOM) |
 | `console_error_panic_hook` | 0.1.7 | `pkg:cargo/console_error_panic_hook@0.1.7` | 🟡 Unassimilated (No upstream CBOM) |
 | `dtolnay/rust-toolchain` | 683b588c487a69d01f6c6ddf40f036ff682cc2c8 | `pkg:github/dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8` | 🟡 Unassimilated (No upstream CBOM) |
-| `dtolnay/rust-toolchain` | 683b588c487a69d01f6c6ddf40f036ff682cc2c8 | `pkg:github/dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8` | 🟡 Unassimilated (No upstream CBOM) |
-| `dtolnay/rust-toolchain` | 683b588c487a69d01f6c6ddf40f036ff682cc2c8 | `pkg:github/dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8` | 🟡 Unassimilated (No upstream CBOM) |
-| `dtolnay/rust-toolchain` | 683b588c487a69d01f6c6ddf40f036ff682cc2c8 | `pkg:github/dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8` | 🟡 Unassimilated (No upstream CBOM) |
-| `dtolnay/rust-toolchain` | 683b588c487a69d01f6c6ddf40f036ff682cc2c8 | `pkg:github/dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8` | 🟡 Unassimilated (No upstream CBOM) |
-| `dtolnay/rust-toolchain` | 683b588c487a69d01f6c6ddf40f036ff682cc2c8 | `pkg:github/dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8` | 🟡 Unassimilated (No upstream CBOM) |
 | `itoa` | 1.0.18 | `pkg:cargo/itoa@1.0.18` | 🟡 Unassimilated (No upstream CBOM) |
-| *... and 23 more unassimilated dependencies* | | | |
+| `jetli/wasm-pack-action` | v0.4.0 | `pkg:github/jetli/wasm-pack-action@v0.4.0` | 🟡 Unassimilated (No upstream CBOM) |
+| `js-sys` | 0.3.94 | `pkg:cargo/js-sys@0.3.94` | 🟡 Unassimilated (No upstream CBOM) |
+| `rustversion` | 1.0.22 | `pkg:cargo/rustversion@1.0.22` | 🟡 Unassimilated (No upstream CBOM) |
+| `serde_core` | 1.0.228 | `pkg:cargo/serde_core@1.0.228` | 🟡 Unassimilated (No upstream CBOM) |
+| `slab` | 0.4.12 | `pkg:cargo/slab@0.4.12` | 🟡 Unassimilated (No upstream CBOM) |
+| `unicode-ident` | 1.0.24 | `pkg:cargo/unicode-ident@1.0.24` | 🟡 Unassimilated (No upstream CBOM) |
+| `wasm-agent` | 0.2.0 | `N/A` | 🟡 Unassimilated (No upstream CBOM) |
+| `wasm-bindgen` | 0.2.117 | `pkg:cargo/wasm-bindgen@0.2.117` | 🟡 Unassimilated (No upstream CBOM) |
+| `wasm-bindgen-futures` | 0.4.67 | `pkg:cargo/wasm-bindgen-futures@0.4.67` | 🟡 Unassimilated (No upstream CBOM) |
+| `wasm-bindgen-macro` | 0.2.117 | `pkg:cargo/wasm-bindgen-macro@0.2.117` | 🟡 Unassimilated (No upstream CBOM) |
+| *... and 9 more unassimilated dependencies* | | | |
 
 ### ⚛️ Post-Quantum Cryptography (PQC) Modernization Roadmap
 
