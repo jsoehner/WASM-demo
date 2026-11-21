@@ -223,6 +223,7 @@ This repository integrates the [`jsoehner/jsi-build-verify`](https://github.com/
 > **Cost of Operation:** Once you configure an LLM API key secret (`GEMINI_API_KEY` or another supported provider key), **every triggered PR or manual workflow run incurs real LLM API billing**. On this repository, an end-to-end verification run with the default `google` / `gemini-3.1-pro-preview` model consumes ~278k tokens (**~$0.23 per run**). To manage spend, set provider billing limits, switch to a lower-cost model (such as `model: gemini-2.5-flash` with `thinking: low`), or limit triggers to `workflow_dispatch` on high-churn branches.
 
 - **Latest Verification Report:** [`docs/BUILD_VERIFICATION.md`](docs/BUILD_VERIFICATION.md)
+- **Cost Control Guide:** [Controlling LLM API Spend](https://github.com/jsoehner/jsi-build-verify/blob/main/docs/COST_CONTROL.md)
 - **Learn More:** [jsoehner/jsi-build-verify](https://github.com/jsoehner/jsi-build-verify)
 
 ## 🛡️ Security & Cryptographic Posture
