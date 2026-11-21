@@ -16,4 +16,7 @@ jobs:
       commit_mode: report-only
       fail_on_error: true
       comment_on_pr: true
-    secrets: inherit
+    secrets:
+      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+      OSS_MTLS_CLIENT_CERT: ${{ secrets.OSS_MTLS_CLIENT_CERT }}
+      OSS_MTLS_CLIENT_KEY: ${{ secrets.OSS_MTLS_CLIENT_KEY }}
